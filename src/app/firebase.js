@@ -49,6 +49,8 @@ export const getUserId = () => {
 }
 
 export const uploadResult = async (userId, resultData) => {
+  console.log("current uid", auth.currentUser?.uid);
+  console.log("uploadResult", userId, resultData);
   const situationId = resultData.situationData.id;
   const resultsDocRef = doc(db, "users", userId, "results", situationId.toString());
   const recordsCollectionRef = collection(db, "users", userId, "results", situationId.toString(), "records");
@@ -64,7 +66,7 @@ export const uploadResult = async (userId, resultData) => {
     await updateDoc(userDocRef, { exp: increment(exp) }).catch(async (error) => {
       if (error.code === 'not-found') {
         // 사용자 문서가 없으면 새로 생성
-        await setDoc(userDocRef, { exp: exp });
+        await setDoc(userDocRef, { exp: exp }, { merge: true });
       } else {
         console.error("Error updating user experience:", error);
       }
