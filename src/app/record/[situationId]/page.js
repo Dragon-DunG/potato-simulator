@@ -55,11 +55,11 @@ export default function SituationRecordPage() {
     const commonClasses = "rounded-sm px-2 py-1 text-xs"
     switch (type) {
       case "normal":
-        return <span className={`${commonClasses} bg-sky-200 text-sky-400`}>보통</span>;
+        return <span className={`${commonClasses} bg-normal-background text-normal-foreground`}>보통</span>;
       case "fast":
-        return <span className={`${commonClasses} bg-green-200 text-green-500`}>빠르게</span>;
+        return <span className={`${commonClasses} bg-fast-background text-fast-foreground`}>빠르게</span>;
       case "slow":
-        return <span className={`${commonClasses} bg-amber-100 text-amber-500`}>느리게</span>;
+        return <span className={`${commonClasses} bg-slow-background text-slow-foreground`}>느리게</span>;
     }
   }
 

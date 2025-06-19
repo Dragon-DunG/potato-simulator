@@ -83,16 +83,19 @@ export default function Home() {
 
   const introPage = (
     <>
-      <h1 className={`title text-center text-5xl flex flex-col items-center justify-center my-auto gap-2 ${ptab.className}`}>
+    <div className="background-container absolute inset-0 flex items-center justify-center -z-100">
+      <Image src={"/image/background/main_temp.png"} alt="intro background png" layout="fill" objectFit="cover" className="object-cover" />
+    </div>
+      {/* <h1 className={`title text-center text-5xl flex flex-col items-center justify-center my-auto gap-2 ${ptab.className}`}>
         <div className="title-text">감자</div>
         <div className="title-text">시뮬레이터</div>
-      </h1>
-      <div className="button-group flex flex-col items-center justify-center mt-8">
-        <div onClick={() => setStartPageOpen(true)} className="start-button flex items-center justify-center w-64 py-3 bg-black text-white rounded-lg transition duration-300 capitalize font-bold text-xl cursor-pointer">
+      </h1> */}
+      <div className="button-group flex flex-col items-center justify-end h-full w-full grow pb-4">
+        <div onClick={() => setStartPageOpen(true)} className="start-button flex items-center justify-center w-full py-4 bg-primary text-white rounded-lg transition duration-300 capitalize font-bold text-xl cursor-pointer">
           START
         </div>
         <div onClick={() => router.push("/record")}
-          className="list-button flex items-center justify-center w-64 py-3 mt-4 bg-white text-black rounded-lg transition duration-300 text-xl cursor-pointer">
+          className="list-button flex items-center justify-center w-64 py-3 mt-4 bg-transparent text-white rounded-lg transition duration-300 text-xl cursor-pointer">
           나의 기록
         </div>
       </div>
@@ -101,6 +104,9 @@ export default function Home() {
 
   const startPage = (
     <>
+    <div className="background-container absolute inset-0 flex items-center justify-center -z-100">
+      <div className="gradient-background absolute inset-0 bg-gradient-to-tr from-bg-from to-bg-to"></div>
+    </div>
       <div className="cancel-button flex justify-center items-center self-start w-10 h-10" onClick={() => setStartPageOpen(false)}>
         <Image src={"/icon/cancel_dark.svg"} alt="cancel" width={48} height={48} />
       </div>
@@ -112,14 +118,14 @@ export default function Home() {
         <div className="description-text"><span className="font-bold">랜덤의 상황이 제시</span>됩니다.</div>
         <div className="description-text mt-4">당신의 센스를 발휘해 보세요!</div>
       </div>
-      <div className="button-group flex flex-col items-center justify-center mt-8">
-        <div onClick={() => handleResponseButtonClick("voice")} className="speak-button flex items-center justify-center w-64 py-3 bg-black text-white rounded-lg transition duration-300 capitalize font-bold text-xl cursor-pointer">
+      <div className="button-group flex flex-col items-center justify-center w-full pb-6">
+        <div onClick={() => handleResponseButtonClick("voice")} className="speak-button flex items-center justify-center w-full py-4 bg-black text-white rounded-lg transition duration-300 capitalize font-bold text-xl cursor-pointer">
           <div className="icon flex items-center justify-center w-4 h-4 mr-2">
             <Image src={"/icon/mic.svg"} alt="mic" width={32} height={32} />
           </div>
           <div className="text">말로 답변</div>
         </div>
-        <div onClick={() => handleResponseButtonClick("text")} className="text-button flex items-center justify-center w-64 py-3 mt-4 bg-white text-black rounded-lg transition duration-300 text-xl cursor-pointer">
+        <div onClick={() => handleResponseButtonClick("text")} className="text-button flex items-center justify-center w-full py-3 mt-4 text-black rounded-lg transition duration-300 text-xl cursor-pointer">
           <div className="icon flex items-center justify-center w-6 h-6 mr-2">
             <Image src={"/icon/bubble.svg"} alt="keyboard" width={32} height={32} />
           </div>
@@ -135,7 +141,7 @@ export default function Home() {
 
 
   return (
-    <div className="main flex flex-col items-center justify-between min-h-screen p-4 pb-16 h-full">
+    <div className="main flex flex-col items-center justify-between min-h-screen p-4 h-full">
       {startPageOpen ? (
         <>
           {startPage}

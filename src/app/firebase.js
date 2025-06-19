@@ -63,10 +63,10 @@ export const uploadResult = async (userId, resultData) => {
     });
     
     const userDocRef = doc(db, "users", userId);
-    await updateDoc(userDocRef, { exp: increment(exp) }).catch(async (error) => {
+    await updateDoc(userDocRef, { exp: increment(exp), count: increment(1) }).catch(async (error) => {
       if (error.code === 'not-found') {
         // 사용자 문서가 없으면 새로 생성
-        await setDoc(userDocRef, { exp: exp }, { merge: true });
+        await setDoc(userDocRef, { exp: exp, count: 1 }, { merge: true });
       } else {
         console.error("Error updating user experience:", error);
       }
@@ -85,6 +85,7 @@ export const getUserRecords = async (userId) => {
   try {
     const userDocSnap = await getDoc(userDocRef);
     const userExp = userDocSnap.exists() ? userDocSnap.data().exp : 0;
+    const userCount = userDocSnap.exists() ? userDocSnap.data().count : 0;
     const resultsSnapshot = await getDocs(resultsCollectionRef);
     console.log("resultsSnapshot", resultsSnapshot);
 
@@ -104,10 +105,10 @@ export const getUserRecords = async (userId) => {
       }
     }
 
-    return { userExp, records: idsWithRecords };
+    return { userExp, records: idsWithRecords, userCount  };
   } catch (error) {
     console.error("Error fetching user records:", error);
-    return { userExp: 0, records: [] };
+    return { userExp: 0, records: [], userCount: 0 };
   }
 };
 

@@ -95,7 +95,7 @@ export default function ResultPage() {
         {getResultType() === "silence" ?
           <div>
             <h1 className="text-3xl font-bold mb-4">
-              <span className="text-green-600">아무 말도</span>
+              <span className="text-primary">아무 말도</span>
               <span> 하지 않았어요</span>
             </h1>
             <div className="text-gray-500 mb-8">
@@ -116,16 +116,16 @@ export default function ResultPage() {
                 getResultType() === "fast" ?
                   <div>
                     <span>평균보다 </span>
-                    <span className="text-green-600">빠르게, 많이</span>
+                    <span className="text-primary">빠르게, 많이</span>
                   </div> :
                   getResultType() === "slow" ?
                     <div>
                       <span>평균보다 </span>
-                      <span className="text-green-600">느리게, 적게</span>
+                      <span className="text-primary">느리게, 적게</span>
                     </div> :
                     <div>
                       <span>평균과</span>
-                      <span className="text-green-600"> 비슷하게</span>
+                      <span className="text-primary"> 비슷하게</span>
                     </div>
               }
             </h1>

@@ -3,6 +3,61 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --conic-holo: conic-gradient(
+  #B6D0F7 0%,
+  #EEF4E1 15%,
+  #FAFCFE 30%,
+  #E2C1F9 45%,
+  #BFD1F9 58%,
+  #FAFCFE 75%,
+  #BAE4E2 85%,
+  #B6D0F7 100%);
+  --linear-holo: linear-gradient(
+  to right,
+  #B6D0F7 0%,
+  #EEF4E1 7.5%,
+  #FAFCFE 15%,
+  #E2C1F9 22.5%,
+  #BFD1F9 29%,
+  #FAFCFE 37.5%,
+  #BAE4E2 42.5%,
+  #B6D0F7 50%,
+  #EEF4E1 57.5%,
+  #FAFCFE 65%,
+  #E2C1F9 72.5%,
+  #BFD1F9 79%,
+  #FAFCFE 87.5%,
+  #BAE4E2 92.5%,
+  #B6D0F7 100%
+)
+}
+
+@theme {
+  --color-primary: #009343;
+  --color-fast-background: #BAF1A8;
+  --color-fast-foreground: #4AC423;
+  --color-normal-background: #B2DBFF;
+  --color-normal-foreground: #378BF9;
+  --color-slow-background: #FFEAB7;
+  --color-slow-foreground: #E6A20F;
+  --color-bg-from: #FFFEEF;
+  --color-bg-to: #E0FFE0;
+  --color-level-1: #8ED706;
+  --color-level-2: #37DFF9;
+  --color-level-3: #6163FF;
+  --color-level-4: #FF8C00;
+  --color-level-5: #FF0000;
+  --color-level-1-dark: #1C613C;
+  --color-level-2-dark: #477895;
+  --color-level-3-dark: #5456AC;
+  --color-level-4-dark: #A26733;
+  --color-level-5-dark: #7F2222;
+  --color-level-1-light: #D2F0B1;
+  --color-level-2-light: #E6FFFA;
+  --color-level-3-light: #AAA6FC;
+  --color-level-4-light: #FFC88D;
+  --color-level-5-light: #F0DBB1;
+  --color-background-gray: #EFEFEF;
 }
 
 @theme inline {
@@ -23,6 +78,33 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 만렙 스타일 */
+@layer utilities {
+  @keyframes linear-holo-scroll {
+    0% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  .bg-linear-holo {
+    background-image : var(--linear-holo);
+    background-size: 200% 100%;
+    animation: linear-holo-scroll 20s linear infinite;
+  };
+  .bg-conic-holo {
+    background-image : var(--conic-holo);
+  }
+  .bg-maxlevel-overlay {
+    background-color: #64300C;
+    opacity: 0.2;
+  }
+  .box-shadow-maxlevel {
+    box-shadow: 0 0 2px 2px rgba(255, 255, 255, 0.2);
+  }
 }
 
 
