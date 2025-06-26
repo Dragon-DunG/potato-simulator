@@ -1,7 +1,7 @@
 'use client';
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGlobalContext } from "./context/globalContext";
 import { situation_data } from "./data/situationData";
@@ -78,10 +78,10 @@ export default function Home() {
     if (currentIndex !== prevIndex) {
       setIsSliding(true);
       if (slideTimeout.current) clearTimeout(slideTimeout.current);
-      slideTimeout.current = setTimeout(() => 
-        { setIsSliding(false);
-          setPrevIndex(currentIndex); // 이전 인덱스 업데이트
-        }, 300);
+      slideTimeout.current = setTimeout(() => {
+        setIsSliding(false);
+        setPrevIndex(currentIndex); // 이전 인덱스 업데이트
+      }, 300);
     }
   }, [currentIndex]);
 
@@ -117,17 +117,17 @@ export default function Home() {
   const randomContainer = (
     <div className="random-container relative w-full h-60 flex items-center justify-center overflow-hidden">
       {/* 이전 이미지 */}
-        <Image
-          key={`prevIndex-${prevIndex}`}
-          src={imageUrlbase(situation_data[prevIndex].id, 'webp')}
-          alt="prev"
-          height={240}
-          width={240}
-          loading="eager"
-          unoptimized={true}
-          priority={true}
-          className={`object-contain absolute h-full w-auto rounded-lg z-10 border border-background-gray ${isSliding ? "animate-slide-out" : ""}`}
-        />
+      <Image
+        key={`prevIndex-${prevIndex}`}
+        src={imageUrlbase(situation_data[prevIndex].id, 'webp')}
+        alt="prev"
+        height={240}
+        width={240}
+        loading="eager"
+        unoptimized={true}
+        priority={true}
+        className={`object-contain absolute h-full w-auto rounded-lg z-10 border border-background-gray ${isSliding ? "animate-slide-out" : ""}`}
+      />
       {/* 현재 이미지 */}
       <Image
         key={`currentIndex-${currentIndex}`}
@@ -147,9 +147,9 @@ export default function Home() {
 
   const introPage = (
     <>
-    <div className="background-container absolute inset-0 flex items-center justify-center -z-100">
-      <Image src={"/image/background/main_temp.png"} alt="intro background png" fill className="object-cover" />
-    </div>
+      <div className="background-container absolute inset-0 flex items-center justify-center -z-100">
+        <Image src={"/image/background/main_temp.png"} alt="intro background png" fill className="object-cover" />
+      </div>
       <div className="button-group flex flex-col items-center justify-end h-full w-full grow pb-4">
         <div onClick={() => setStartPageOpen(true)} className="start-button flex items-center justify-center w-full py-4 bg-primary text-white rounded-lg transition duration-300 capitalize font-bold text-xl cursor-pointer">
           START
@@ -164,13 +164,13 @@ export default function Home() {
 
   const startPage = (
     <>
-    <div className="background-container absolute inset-0 flex items-center justify-center -z-100">
-      <div className="gradient-background absolute inset-0 bg-gradient-to-tr from-bg-from to-bg-to"></div>
-    </div>
+      <div className="background-container absolute inset-0 flex items-center justify-center -z-100">
+        <div className="gradient-background absolute inset-0 bg-gradient-to-tr from-bg-from to-bg-to"></div>
+      </div>
       <div className="cancel-button flex justify-center items-center self-start w-10 h-10" onClick={() => {
         if (searchParams.get("start") === "true") router.push("/");
         setStartPageOpen(false);
-        }}>
+      }}>
         <Image src={"/icon/cancel_dark.svg"} alt="cancel" width={48} height={48} />
       </div>
       {randomContainer}
@@ -197,16 +197,18 @@ export default function Home() {
   );
 
   return (
-    <div className="main flex flex-col items-center justify-between min-h-screen p-4 h-full">
-      {startPageOpen ? (
-        <>
-          {startPage}
-        </>
-      ) : (
-        <>
-          {introPage}
-        </>
-      )}
-    </div>
+    <Suspense>
+      <div className="main flex flex-col items-center justify-between min-h-screen p-4 h-full">
+        {startPageOpen ? (
+          <>
+            {startPage}
+          </>
+        ) : (
+          <>
+            {introPage}
+          </>
+        )}
+      </div>
+    </Suspense>
   );
 }
