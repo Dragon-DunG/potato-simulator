@@ -8,7 +8,7 @@ import { getImageUrl } from "../situation/page";
 import { getUserId, uploadResult } from "../firebase";
 
 export default function ResultPage() {
-  const { transcription, duration, situationData, } = useGlobalContext();
+  const { transcription, duration, situationData, fetchAndCacheUser } = useGlobalContext();
   const [responsType, setResponseType] = useState("voice");
   const router = useRouter();
   const savedRef = useRef(false); // 저장 여부를 확인하기 위한 ref
@@ -22,7 +22,7 @@ export default function ResultPage() {
       savedRef.current = true; // 저장 완료 플래그 설정
       const userId = await getUserId();
       const resultData = makeResultData();
-      await uploadResult(userId, resultData);
+      await uploadResult(userId, resultData).then(() => { fetchAndCacheUser(); }); // 결과 저장 후 사용자 데이터 갱신
       console.log("결과 저장 완료:", resultData);
     };
     const resultType = getResultType();

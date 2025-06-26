@@ -5,17 +5,24 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGlobalContext } from "./context/globalContext";
 import { situation_data } from "./data/situationData";
-import { getUserDoneIds } from "./firebase";
 
-export default function Home() {
+export default function HomeWrapper() {
+  return (
+    <Suspense>
+      <Home />
+    </Suspense>
+  );
+}
+
+function Home() {
   const initialAnimationSpeed = 500; // 초기 애니메이션 속도 설정
-  const { situationData, setSituationData, passedSituations } = useGlobalContext();
+  const { situationData, setSituationData, passedSituations, userData, fetchAndCacheUser } = useGlobalContext();
   const [startPageOpen, setStartPageOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [prevIndex, setPrevIndex] = useState(0);
   const [isSliding, setIsSliding] = useState(true);
   const [finalIndex, setFinalIndex] = useState(-1);
-  const [isAnimating, setIsAnimating] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
   const [animationSpeed, setAnimationSpeed] = useState(initialAnimationSpeed);
   const [responseType, setResponseType] = useState("voice");
   const [userDoneIds, setUserDoneIds] = useState([]);
@@ -32,6 +39,18 @@ export default function Home() {
       randomIndex = Math.floor(Math.random() * situation_data.length);
     } while (passedSituations.includes(randomIndex) || userDoneIds.includes(randomIndex) || randomIndex === currentIndex);
     return randomIndex;
+  }
+
+  const startPageOpenHandler = () => {
+    setStartPageOpen(true);
+    setIsAnimating(true);
+    setCurrentIndex(getRandomIndex());
+    setFinalIndex(-1);
+  }
+
+  const startPageCloseHandler = () => {
+    setStartPageOpen(false);
+    setIsAnimating(false);
   }
 
   const handleResponseButtonClick = (responseType) => {
@@ -62,15 +81,18 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const fetchUserDoneIds = async () => {
-      const doneIds = await getUserDoneIds();
-      setUserDoneIds(doneIds);
-    };
-    fetchUserDoneIds();
-  }, []);
+    if (!userData) {
+      fetchAndCacheUser();
+      console.log("User data fetched and cached:", userData);
+    } else {
+      setUserDoneIds(userData.doneIds || []);
+    }
+  }, [userData, fetchAndCacheUser]);
 
   useEffect(() => {
-    setStartPageOpen(searchParams.get("start") === "true");
+    if (searchParams.get("start") === "true") {
+      startPageOpenHandler();
+    }
   }, [searchParams]);
 
   // 이미지 변경 시 prevIndex 업데이트 및 슬라이드 트리거
@@ -151,7 +173,7 @@ export default function Home() {
         <Image src={"/image/background/main_temp.png"} alt="intro background png" fill className="object-cover" />
       </div>
       <div className="button-group flex flex-col items-center justify-end h-full w-full grow pb-4">
-        <div onClick={() => setStartPageOpen(true)} className="start-button flex items-center justify-center w-full py-4 bg-primary text-white rounded-lg transition duration-300 capitalize font-bold text-xl cursor-pointer">
+        <div onClick={startPageOpenHandler} className="start-button flex items-center justify-center w-full py-4 bg-primary text-white rounded-lg transition duration-300 capitalize font-bold text-xl cursor-pointer">
           START
         </div>
         <div onClick={() => router.push("/record")}
@@ -169,7 +191,7 @@ export default function Home() {
       </div>
       <div className="cancel-button flex justify-center items-center self-start w-10 h-10" onClick={() => {
         if (searchParams.get("start") === "true") router.push("/");
-        setStartPageOpen(false);
+        startPageCloseHandler();
       }}>
         <Image src={"/icon/cancel_dark.svg"} alt="cancel" width={48} height={48} />
       </div>
@@ -197,18 +219,16 @@ export default function Home() {
   );
 
   return (
-    <Suspense>
-      <div className="main flex flex-col items-center justify-between min-h-screen p-4 h-full">
-        {startPageOpen ? (
-          <>
-            {startPage}
-          </>
-        ) : (
-          <>
-            {introPage}
-          </>
-        )}
-      </div>
-    </Suspense>
+    <div className="main flex flex-col items-center justify-between min-h-screen p-4 h-full">
+      {startPageOpen ? (
+        <>
+          {startPage}
+        </>
+      ) : (
+        <>
+          {introPage}
+        </>
+      )}
+    </div>
   );
 }

@@ -155,6 +155,29 @@ export const getSituationRecords = async (userId, situationId) => {
   }
 }
 
+export const fetchUserData = async () => {
+  const userId = await getUserId();
+  if (!userId) {
+    console.error("User ID not found.");
+    return null;
+  }
+  const userDocRef = doc(db, "users", userId);
+  try {
+    const userDocSnap = await getDoc(userDocRef);
+    if (userDocSnap.exists()) {
+      const userCache = { id: userId, ...userDocSnap.data() };
+      console.log("User data cached:", userCache);
+      return userCache;
+    } else {
+      console.log("User document does not exist.");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    return null;
+  }
+}
+
 export const getUserDoneIds = async () => {
   const userId = await getUserId();
   const userDocRef = doc(db, "users", userId);

@@ -118,7 +118,7 @@ export default function RecordPage() {
             <div className="level-sticker flex items-center justify-center w-full">
               <div className={`sticker-box flex relative items-center justify-center ${userLevel >= level_data.length ? "w-80" : "-rotate-8 w-60"}`}>
                 <div className="sticker-text absolute top-[24%] left-[57%]">{userData?.count}</div>
-                <Image src={`/image/sticker/records_level_${userLevel}.png`} alt={`레벨 ${userLevel} 스티커`} width={300} height={200} className="w-full h-full object-cover" />
+                <Image src={`/image/sticker/record/record_level_${userLevel}.png`} alt={`레벨 ${userLevel} 스티커`} width={300} height={200} className="w-full h-full object-cover" />
               </div>
             </div>
           </div>
