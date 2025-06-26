@@ -11,7 +11,7 @@ export function getImageUrl(situation) {
 }
 
 export default function SituationPage() {
-  const { setTranscription, setDuration, situationData, setSituationData } = useGlobalContext();
+  const { setTranscription, setDuration, situationData, setPassedSituations } = useGlobalContext();
   const [responseType, setResponseType] = useState("voice"); // "voice" or "text"
   const [isLoading, setIsLoading] = useState(true);
   const [counter, setCounter] = useState(5);
@@ -21,7 +21,6 @@ export default function SituationPage() {
   const [audioBlob, setAudioBlob] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [responseText, setResponseText] = useState("");
-  const [textCountRemaining, setTextCountRemaining] = useState(0);
   const [recognizing, setRecognizing] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -32,9 +31,6 @@ export default function SituationPage() {
 
   const startRecording = () => {
     console.log("Starting recording...");
-    startTimeRef.current = Date.now();
-    console.log("Start time:", startTimeRef.current);
-
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       const mimeType = "audio/webm;codecs=opus"; // "audio/webm" or "audio/wav" or "audio/mp4"
       if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -119,6 +115,15 @@ export default function SituationPage() {
   };
 
   const textSubmit = () => {
+    let duration = situationData?.time; // 기본값: 최대 시간
+    if (startTimeRef.current) {
+      duration = Math.round((Date.now() - startTimeRef.current) / 1000); // 최대 시간 초과 방지
+      if (situationData?.time && duration > situationData.time) {
+        duration = situationData.time;
+      }
+    }
+    setDuration(duration);
+    console.log("Answer duration:", duration);
     //2초 후에 텍스트 전송
     setTimeout(() => {
       console.log("Text submitted:", responseText);
@@ -127,27 +132,19 @@ export default function SituationPage() {
 
       router.push("/result?responseType=text");
       setResponseText("");
-
     }, 2000);
   }
 
   const skipSituation = () => {
     setIsLoading(true);
-    const currentIndex = situationData.id - 1;
-    let randomIndex = Math.floor(Math.random() * situation_data.length);
-    while (randomIndex === currentIndex) {
-      randomIndex = Math.floor(Math.random() * situation_data.length);
-    }
-    setSituationData(situation_data[randomIndex]);
-    setIsStarted(false);
+    setPassedSituations(prev => [...prev, situationData.id]);
+    router.push("/?start=true");
+  }
+
+  const startResponse = () => {
+    startTimeRef.current = Date.now();
+    setIsStarted(true);
     setIsCounterStarted(false);
-    setCounter(5);
-    setResponseText("");
-    setAudioBlob(null);
-    setTranscription("");
-    setTextCountRemaining(0);
-    setTimeRemaining(0);
-    setIsRecording(false);
   }
 
   useEffect(() => {
@@ -213,6 +210,7 @@ export default function SituationPage() {
           } else {
             clearInterval(counterInterval);
             setIsStarted(true);
+            startTimeRef.current = Date.now();
             return 0;
           }
         });
@@ -241,7 +239,7 @@ export default function SituationPage() {
   }, [isStarted, responseType]);
 
   useEffect(() => {
-    if (situationData?.time >= 0 && isStarted && responseType === "voice") {
+    if (situationData?.time >= 0 && isStarted) {
       setTimeRemaining(situationData?.time);
     }
 
@@ -260,13 +258,6 @@ export default function SituationPage() {
     }, 1000);
 
   }, [situationData?.time, isStarted, responseType]);
-
-  useEffect(() => {
-    if (isStarted) {
-      setTextCountRemaining(situationData?.textCount);
-    }
-  }, [isStarted, situationData?.textCount]);
-
 
   // 답변 완료 시 소요 시간 계산
   const handleAnswerComplete = () => {
@@ -327,9 +318,7 @@ export default function SituationPage() {
 
           <div className="button-container justify-self-end mt-auto flex flex-col items-center justify-center w-full relative">
             <span className="text-xl text-gray-400 font-bold absolute">5초 뒤 답변 시작...</span>
-            <div className="animate-start-button cursor-pointer bg-black text-white rounded-lg capitalize font-bold text-xl flex items-center justify-center py-3 w-full opacity-0 z-50" onClick={() => {
-              setIsStarted(true); setIsCounterStarted(false);
-            }}>
+            <div className="animate-start-button cursor-pointer bg-black text-white rounded-lg capitalize font-bold text-xl flex items-center justify-center py-3 w-full opacity-0 z-50" onClick={startResponse}>
               <span>바로 시작</span>
             </div>
           </div>
@@ -352,7 +341,6 @@ export default function SituationPage() {
         <div className="wave absolute w-24 h-24 rounded-full bg-gray-200"></div>
         <div className="wave absolute w-24 h-24 rounded-full bg-gray-200"></div>
         <div className="absolute w-24 h-24 rounded-full bg-gray-300"></div>
-        {/* <span className="text-black font-bold">🎤</span> */}
 
         <div className="waveform flex items-center gap-1 absolute">
           {[...Array(6)].map((_, index) => (
@@ -364,9 +352,7 @@ export default function SituationPage() {
       </div>
 
       <div className="submit-button flex justify-center items-center bg-black text-white rounded-lg capitalize font-bold text-xl py-3 w-full"
-        onClick={() => {
-          handleAnswerComplete();
-        }}
+        onClick={handleAnswerComplete}
       >
         <span>답변 완료!</span>
       </div>
@@ -380,7 +366,7 @@ export default function SituationPage() {
         <span >남은 글자수</span>
         <div className="time-remaining-text flex items-center gap-2">
           <Image src={"/icon/clock.svg"} alt="clock" width={20} height={20} className="w-5 h-5" />
-          <span className="text-xl font-bold">{textCountRemaining}</span>
+          <span className="text-xl font-bold">{timeRemaining}초</span>
         </div>
       </div>
       <div className="text-input-container flex items-center justify-between w-full mt-4 gap-2">
@@ -390,14 +376,8 @@ export default function SituationPage() {
           placeholder="답변을 입력하세요..."
           rows={5}
           onChange={(e) => {
-            setTextCountRemaining(situationData?.textCount - e.target.value.length);
-            if (e.target.value.length > situationData?.textCount) {
-              setResponseText(e.target.value.slice(0, situationData?.textCount));
-            } else {
-              setResponseText(e.target.value);
-            }
+            setResponseText(e.target.value);
           }}
-          maxLength={situationData?.textCount}
         ></textarea>
         <div className="submit-button"
           onClick={textSubmit}

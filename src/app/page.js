@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useGlobalContext } from "./context/globalContext";
 import { situation_data } from "./data/situationData";
+import { getUserDoneIds } from "./firebase";
 
 export default function Home() {
   const initialAnimationSpeed = 500; // 초기 애니메이션 속도 설정
-  const { situationData, setSituationData } = useGlobalContext();
+  const { situationData, setSituationData, passedSituations } = useGlobalContext();
   const [startPageOpen, setStartPageOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [prevIndex, setPrevIndex] = useState(0);
@@ -17,11 +18,21 @@ export default function Home() {
   const [isAnimating, setIsAnimating] = useState(true);
   const [animationSpeed, setAnimationSpeed] = useState(initialAnimationSpeed);
   const [responseType, setResponseType] = useState("voice");
+  const [userDoneIds, setUserDoneIds] = useState([]);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const slideTimeout = useRef(null);
 
 
   const imageUrlbase = (id, ext) => `/image/thumbnails/${ext}/situationScreenImage_${String(id).padStart(2, '0')}.${ext}`;
+
+  const getRandomIndex = () => {
+    let randomIndex = 0;
+    do {
+      randomIndex = Math.floor(Math.random() * situation_data.length);
+    } while (passedSituations.includes(randomIndex) || userDoneIds.includes(randomIndex) || randomIndex === currentIndex);
+    return randomIndex;
+  }
 
   const handleResponseButtonClick = (responseType) => {
     setIsAnimating(true);
@@ -31,7 +42,7 @@ export default function Home() {
 
     const slowDownAnimation = () => {
       if (speed > 1000) {
-        const randomIndex = Math.floor(Math.random() * situation_data.length);
+        const randomIndex = getRandomIndex();
         setFinalIndex(randomIndex); // 최종 선택된 인덱스 설정
         setCurrentIndex(randomIndex); // 현재 인덱스 업데이트
         return;
@@ -41,7 +52,7 @@ export default function Home() {
       setAnimationSpeed(speed);
 
       setTimeout(() => {
-        const randomIndex = Math.floor(Math.random() * situation_data.length);
+        const randomIndex = getRandomIndex();
         setCurrentIndex(randomIndex);
         slowDownAnimation();
       }, speed);
@@ -49,6 +60,18 @@ export default function Home() {
 
     slowDownAnimation();
   };
+
+  useEffect(() => {
+    const fetchUserDoneIds = async () => {
+      const doneIds = await getUserDoneIds();
+      setUserDoneIds(doneIds);
+    };
+    fetchUserDoneIds();
+  }, []);
+
+  useEffect(() => {
+    setStartPageOpen(searchParams.get("start") === "true");
+  }, [searchParams]);
 
   // 이미지 변경 시 prevIndex 업데이트 및 슬라이드 트리거
   useEffect(() => {
@@ -81,7 +104,7 @@ export default function Home() {
 
     if (isAnimating) {
       interval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * situation_data.length);
+        const randomIndex = getRandomIndex();
         setCurrentIndex(randomIndex);
       }, animationSpeed);
     }
@@ -144,7 +167,10 @@ export default function Home() {
     <div className="background-container absolute inset-0 flex items-center justify-center -z-100">
       <div className="gradient-background absolute inset-0 bg-gradient-to-tr from-bg-from to-bg-to"></div>
     </div>
-      <div className="cancel-button flex justify-center items-center self-start w-10 h-10" onClick={() => setStartPageOpen(false)}>
+      <div className="cancel-button flex justify-center items-center self-start w-10 h-10" onClick={() => {
+        if (searchParams.get("start") === "true") router.push("/");
+        setStartPageOpen(false);
+        }}>
         <Image src={"/icon/cancel_dark.svg"} alt="cancel" width={48} height={48} />
       </div>
       {randomContainer}

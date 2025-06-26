@@ -8,9 +8,10 @@ export function GlobalContextProvider({ children }) {
   const [transcription, setTranscription] = useState("");
   const [duration, setDuration] = useState(0);
   const [situationData, setSituationData] = useState(null);
+  const [passedSituations, setPassedSituations] = useState([]);
 
   return (
-    <GlobalContext.Provider value={{ transcription, setTranscription, duration, setDuration, situationData, setSituationData }}>
+    <GlobalContext.Provider value={{ transcription, setTranscription, duration, setDuration, situationData, setSituationData, passedSituations, setPassedSituations }}>
       {children}
     </GlobalContext.Provider>
   );

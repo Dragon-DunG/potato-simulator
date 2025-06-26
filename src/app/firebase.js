@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, addDoc, doc, updateDoc, increment, setDoc, getDoc, getDocs } from "firebase/firestore";
+import { getFirestore, collection, addDoc, doc, updateDoc, increment, setDoc, getDoc, getDocs, arrayUnion, runTransaction } from "firebase/firestore";
+import { situation_data } from "./data/situationData";
 
 const exp = 400; // 경험치 상승값
 
@@ -61,19 +62,45 @@ export const uploadResult = async (userId, resultData) => {
       ...resultData,
       createdAt: new Date(),
     });
-    
+
     const userDocRef = doc(db, "users", userId);
-    await updateDoc(userDocRef, { exp: increment(exp), count: increment(1) }).catch(async (error) => {
-      if (error.code === 'not-found') {
-        // 사용자 문서가 없으면 새로 생성
-        await setDoc(userDocRef, { exp: exp, count: 1 }, { merge: true });
-      } else {
-        console.error("Error updating user experience:", error);
-      }
-    });
-    console.log("Result uploaded successfully:", resultData);
-    return true;
-  } catch (error) {
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          // 사용자 문서가 없으면 새로 생성
+          transaction.set(userDocRef, { exp: exp, count: 1, doneIds: [situationId] });
+        } else {
+          // 사용자 문서가 존재하면
+          let doneIds = userDoc.data().doneIds || [];
+          if (!doneIds.includes(situationId)) {
+            doneIds = [...doneIds, situationId];
+          }
+          const allDone = Array.from(situation_data, (situation) => situation.id).every((id) => doneIds.includes(id));
+          if (allDone) {
+            // 모든 상황을 완료한 경우
+            transaction.update(userDocRef, {
+              exp: increment(exp),
+              count: increment(1),
+              doneIds: [],
+            });
+          } else {
+            // 아직 완료하지 않은 상황이 있는 경우
+            transaction.update(userDocRef, {
+              exp: increment(exp),
+              count: increment(1),
+              doneIds: arrayUnion(situationId),
+            });
+          }
+        }
+      });
+      console.log("User experience updated successfully.");
+      return true;
+    } catch (error) { // 트랜잭션 에러
+      console.error("Error updating user experience in transaction:", error);
+      return false;
+    }
+  } catch (error) { // 결과 업로드 에러
     console.error("Error uploading result:", error);
     return false;
   }
@@ -88,6 +115,7 @@ export const getUserRecords = async (userId) => {
     const userCount = userDocSnap.exists() ? userDocSnap.data().count : 0;
     const resultsSnapshot = await getDocs(resultsCollectionRef);
     console.log("resultsSnapshot", resultsSnapshot);
+    const userDoneIds = userDocSnap.exists() ? userDocSnap.data().doneIds || [] : [];
 
     const idsWithRecords = [];
     for (const docSnap of resultsSnapshot.docs) {
@@ -105,10 +133,10 @@ export const getUserRecords = async (userId) => {
       }
     }
 
-    return { userExp, records: idsWithRecords, userCount  };
+    return { userExp, records: idsWithRecords, userCount, doneIds: userDoneIds };
   } catch (error) {
     console.error("Error fetching user records:", error);
-    return { userExp: 0, records: [], userCount: 0 };
+    return { userExp: 0, records: [], userCount: 0, doneIds: []};
   }
 };
 
@@ -123,6 +151,23 @@ export const getSituationRecords = async (userId, situationId) => {
     return records;
   } catch (error) {
     console.error("Error fetching situation records:", error);
+    return [];
+  }
+}
+
+export const getUserDoneIds = async () => {
+  const userId = await getUserId();
+  const userDocRef = doc(db, "users", userId);
+  try {
+    const userDocSnap = await getDoc(userDocRef);
+    if (userDocSnap.exists()) {
+      return userDocSnap.data().doneIds || [];
+    } else {
+      console.log("User document does not exist.");
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching user done IDs:", error);
     return [];
   }
 }

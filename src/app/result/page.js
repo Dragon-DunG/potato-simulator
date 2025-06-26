@@ -8,7 +8,7 @@ import { getImageUrl } from "../situation/page";
 import { getUserId, uploadResult } from "../firebase";
 
 export default function ResultPage() {
-  const { transcription, duration, situationData } = useGlobalContext();
+  const { transcription, duration, situationData, } = useGlobalContext();
   const [responsType, setResponseType] = useState("voice");
   const router = useRouter();
   const savedRef = useRef(false); // 저장 여부를 확인하기 위한 ref
@@ -16,6 +16,7 @@ export default function ResultPage() {
   useEffect(() => { // firestore에 결과 저장
     const saveResult = async () => {
       if (!situationData) return;
+      if (!transcription) return; // transcription이 비어있는 경우 처리
       if (duration === 0) return; // duration이 0인 경우 처리
       if (savedRef.current) return; // 이미 저장된 경우 중복 저장 방지
       savedRef.current = true; // 저장 완료 플래그 설정
@@ -24,6 +25,8 @@ export default function ResultPage() {
       await uploadResult(userId, resultData);
       console.log("결과 저장 완료:", resultData);
     };
+    const resultType = getResultType();
+    if (resultType === "silence") return; // silence인 경우 저장하지 않음
     saveResult();
   }, [situationData, duration]);
 
@@ -104,7 +107,7 @@ export default function ResultPage() {
             </div>
             <div className="flex justify-center bg-gray-200 rounded-full rounded-br-none p-6 mx-4">
               <div className="flex gap-2">
-                { Array.from({ length: 3 }).map((_, index) => (
+                {Array.from({ length: 3 }).map((_, index) => (
                   <div key={index} className="rounded-full bg-gray-500 w-2 h-2"></div>
                 ))}
               </div>
@@ -155,7 +158,9 @@ export default function ResultPage() {
       </div>
       <div className="w-full flex gap-4 justify-center absolute bottom-0 p-4 bg-white">
         <div className="flex-grow button rounded-xl bg-gray-200 p-4 text-center text-xl cursor-pointer" onClick={() => router.push("/")}>메인으로</div>
-        <div className="flex-grow button rounded-xl bg-black text-white p-4 text-center text-xl cursor-pointer">다음상황!</div>
+        <div className="flex-grow button rounded-xl bg-black text-white p-4 text-center text-xl cursor-pointer"
+          onClick={() => router.push('/?start=true')}>
+          다음상황!</div>
       </div>
 
     </div>
