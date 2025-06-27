@@ -186,7 +186,6 @@ function Home() {
           tabIndex={-1}
           preload="auto"
           playsInline
-          poster="/image/background/main_temp.png"
           aria-hidden="true"
           controls={false}
           disablePictureInPicture={true}
