@@ -381,32 +381,36 @@ export default function SituationPage() {
 
 
   return (
-    <div className="situation-page flex flex-col h-screen">
+    <div className="situation-page w-full flex flex-col h-full relative overflow-hidden">
       {recognizing && loadingAnimation}
 
-      <div className="cancel-button flex justify-center items-center self-start w-10 h-10 absolute top-4 left-4 z-20 mix-blend-difference"
-        onClick={() => router.push("/")}>
-        <Image src={"/icon/cancel_white.svg"} alt="cancel" width={48} height={48} />
+      <div className="button-group flex items-center justify-between w-full absolute top-0 left-0 z-20">
+        <div className="cancel-button flex justify-center items-center self-start w-10 h-10 m-4 mix-blend-difference"
+          onClick={() => router.push("/")}>
+          <Image src={"/icon/cancel_white.svg"} alt="cancel" width={48} height={48} />
+        </div>
+
+        <div
+          onClick={skipSituation}
+          className="skip-button flex justify-center items-center m-4 py-2 px-4 bg-black rounded-full cursor-pointer">
+          <span className="text-white text-sm">이 상황 패스</span>
+        </div>
       </div>
 
-      <div
-        onClick={skipSituation}
-        className="skip-button flex justify-center items-center absolute top-4 right-4 py-2 px-4 z-20 bg-black rounded-full cursor-pointer">
-        <span className="text-white text-sm">이 상황 패스</span>
-      </div>
+
 
       {isStarted && (
         <div className="situation-bubble-container flex flex-col w-full h-1/2 absolute top-0 left-0 p-4">
           <div className="situation-bubble flex flex-col self-start items-start justify-center justify-self-end mt-auto gap-1">
             <span className="text-white">{situationData?.name}</span>
-            <div className="bubble-left bg-gray-300 px-8 py-2 rounded-full rounded-tl-none shadow-md max-w-xs opacity-80 z-50 ">
+            <div className="bubble-left bg-gray-300 px-8 py-2 rounded-full rounded-tl-none shadow-md max-w-xs opacity-80 z-50">
               <span>{situationData?.description}</span>
             </div>
           </div>
         </div>
       )}
 
-      <div className="bg-image w-full h-full bg-cover bg-center animate-bg-shrink -z-10">
+      <div className="bg-image w-full h-full bg-cover bg-center animate-bg-shrink -z-10 overflow-hidden">
 
         {isCounterStarted && !isStarted && (
           <div className={`${isCounterStarted && 'counter-overlay'} absolute inset-0 z-10 flex justify-center items-center overflow-hidden bg-[rgba(0,0,0,0.7)]`}>

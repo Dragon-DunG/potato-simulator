@@ -15,7 +15,7 @@ export default function HomeWrapper() {
 }
 
 function Home() {
-  const initialAnimationSpeed = 400; // 초기 애니메이션 속도 설정
+  const initialAnimationSpeed = 500; // 초기 애니메이션 속도 설정
   const { situationData, setSituationData, passedSituations, userData, fetchAndCacheUser } = useGlobalContext();
   const [startPageOpen, setStartPageOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -106,7 +106,7 @@ function Home() {
       slideTimeout.current = setTimeout(() => {
         setIsSliding(false);
         setPrevIndex(currentIndex); // 이전 인덱스 업데이트
-      }, 300);
+      }, 400);
     }
   }, [currentIndex]);
 
@@ -196,11 +196,11 @@ function Home() {
           Your browser does not support the video tag.
         </video>
       </div>
-      <div className="title-container w-full flex items-center justify-center px-8 pt-12">
+      <div className="title-container w-full flex items-center justify-center px-10 pt-16">
         <Image src={"/image/title.svg"} alt="감자 시뮬레이터" width={200} height={100} className="w-full h-auto drop-shadow-xl drop-shadow-green-900/50" />
       </div>
 
-      <div className="button-group flex flex-col items-center justify-end h-full w-full grow">
+      <div className="button-group flex flex-col items-center justify-end h-full w-full grow p-4">
         <div onClick={startPageOpenHandler} className="start-button flex items-center justify-center w-full py-4 bg-primary text-white rounded-lg transition duration-300 capitalize font-bold text-xl cursor-pointer">
           START
         </div>
@@ -230,7 +230,7 @@ function Home() {
         <div className="description-text mt-4">당신의 센스를 발휘해 보세요!</div>
       </div>
 
-      <div className="button-group flex flex-col items-center justify-center w-full pb-6 text-lg">
+      <div className="button-group flex flex-col items-center justify-center w-full pb-6 p-4 text-lg">
         {slowDown ? (
           <div className="loading-button flex items-center justify-center w-full py-4 bg-black text-white rounded-lg transition duration-300 capitalize font-semibold">상황 선택 중...</div>
         ) : (
@@ -255,7 +255,7 @@ function Home() {
   );
 
   return (
-    <div className="main flex flex-col items-center justify-between min-h-screen p-8 h-full w-full relative">
+    <div className="main flex flex-col items-center justify-between min-h-screen p-4 h-full w-full relative">
       {startPageOpen ? (
         <>
           {startPage}
