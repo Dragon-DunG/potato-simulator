@@ -177,9 +177,31 @@ function Home() {
   const introPage = (
     <>
       <div className="background-container w-full absolute inset-0 flex items-center justify-center -z-100">
-        <Image src={"/image/background/main_temp.png"} alt="intro background png" fill className="object-cover" />
+        <video
+          src={"/video/main_background.mp4"}
+          autoPlay
+          loop
+          muted
+          className="absolute inset-0 object-cover w-full h-full"
+          tabIndex={-1}
+          preload="auto"
+          playsInline
+          poster="/image/background/main_temp.png"
+          aria-hidden="true"
+          controls={false}
+          disablePictureInPicture={true}
+          disableRemotePlayback={true}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <source src="/video/background.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
       </div>
-      <div className="button-group flex flex-col items-center justify-end h-full w-full grow pb-4">
+      <div className="title-container w-full flex items-center justify-center px-8 pt-12">
+        <Image src={"/image/title.svg"} alt="감자 시뮬레이터" width={200} height={100} className="w-full h-auto drop-shadow-xl drop-shadow-green-900/50" />
+      </div>
+
+      <div className="button-group flex flex-col items-center justify-end h-full w-full grow">
         <div onClick={startPageOpenHandler} className="start-button flex items-center justify-center w-full py-4 bg-primary text-white rounded-lg transition duration-300 capitalize font-bold text-xl cursor-pointer">
           START
         </div>
@@ -234,7 +256,7 @@ function Home() {
   );
 
   return (
-    <div className="main flex flex-col items-center justify-between min-h-screen p-4 h-full w-full relative">
+    <div className="main flex flex-col items-center justify-between min-h-screen p-8 h-full w-full relative">
       {startPageOpen ? (
         <>
           {startPage}

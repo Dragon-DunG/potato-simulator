@@ -245,15 +245,6 @@ body {
   }
   } 
 
-  @keyframes drawer {
-  0% {
-    height: 0;
-  }
-  100% {
-    height: auto;
-  }
-  }
-
 
 /* --- 커스텀 클래스 --- */
 
