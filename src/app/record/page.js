@@ -23,15 +23,15 @@ function ProgressBar({ exp, level }) {
     expText = level_data[level - 1].exp
   } else {
     progressBarColor = `bg-gradient-to-r ${fromColor} ${toColor}`;
-    expText = `${exp}/${level_data[level].exp}`;
+    expText = `${exp} / ${level_data[level].exp}`;
   }
 
   return (
     <div className="container flex-col w-full">
-      <div className="text-sm text-white opacity-30 mb-1 text-right mx-1 capitalize">
+      <div className="text-xs font-light text-white opacity-50 mb-1 text-right mx-1 capitalize">
         XP {expText}
       </div>
-      <div className={`progress-container w-full bg-gray-200 rounded-full h-3 overflow-hidden  ${level >= level_data.length ? "box-shadow-maxlevel" : ""}`}>
+      <div className={`progress-container w-full bg-gray-200 rounded-full h-2 overflow-hidden  ${level >= level_data.length ? "box-shadow-maxlevel" : ""}`}>
         <div
           className={`progress-bar ${progressBarColor} h-full`}
           style={{ width: `${progress}%` }}
@@ -72,25 +72,18 @@ export default function RecordPage() {
   }
     , []);
 
-  // 레벨이 없을 경우 기본값 설정
-  const noData = (
-    <div className="flex flex-col items-center justify-center w-full h-full">
-      <div className="flex flex-1/3 items-center justify-center w-full">
-        <ProgressBar progress={0} />
-      </div>
-      <div className="flex flex-2/3 text-gray-500 items-center justify-center w-full">
-        <p className="text-lg">답변 기록을 쌓아보세요!</p>
-      </div>
-    </div>
-  );
-
   const recordList = (
-    <div className="flex flex-col items-center justify-center w-full h-full">
-      <div className="flex flex-col flex-2/3 items-center w-full gap-3">
+    <div className="flex flex-col items-center justify-center w-full">
+      <div className="flex flex-col items-center w-full gap-3">
+        {userData?.records?.length === 0 && (
+          <div className="no-records flex items-center justify-center w-full h-full opacity-50 ">
+            답변 기록을 쌓아보세요!
+          </div>
+        )}
         {userData?.records?.map((record, index) => (
           <div key={index} className="record-item flex bg-white rounded-xl p-5 w-full items-center justify-center cursor-pointer"
             onClick={() => router.push(`/record/${record}`)}>
-            <div className="title line-clamp-1 overflow-ellipsis px-2">{
+            <div className="title line-clamp-1 overflow-ellipsis px-3 text-sm">{
               situation_data[record - 1].title
             }</div>
           </div>
@@ -101,38 +94,38 @@ export default function RecordPage() {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-background-gray">
-      <div className={`title-box w-full relative flex flex-col justify-between items-center justify-self-start rounded-b-xl overflow-hidden `}>
-        <div className={`title-box-background absolute top-0 left-0 w-full h-full ${level_data[userLevel - 1].bgColor}`}>
+      <div className={`title-box w-full relative flex flex-col justify-between items-center justify-self-start mb-auto`}>
+        <div className={`title-box-background absolute top-0 left-0 w-full h-full rounded-b-xl ${level_data[userLevel - 1].bgColor}`}>
           {userLevel >= level_data.length &&
-            <div className="overlay absolute inset-0 bg-maxlevel-overlay"></div>
+            <div className="overlay absolute inset-0 bg-maxlevel-overlay rounded-b-xl"></div>
           }
         </div>
-        <div className="title-box-inner relative w-full h-full flex flex-col items-center justify-between p-8">
+        <div className="title-box-inner relative w-full h-full flex flex-col items-center justify-between p-7">
           <div className="w-full flex justify-between items-center justify-self-start mb-auto">
             <div className="cancel-button flex justify-start items-center absolute w-10 h-10 cursor-pointer" onClick={() => router.back()}>
               <Image src={"/icon/back_white_fit.svg"} alt="cancel" width={10} height={10} />
             </div>
-            <h1 className="self-center mx-auto text-white">나의 기록</h1>
+            <h1 className="self-center mx-auto font-semibold text-white">나의 기록</h1>
           </div>
-          <div className="level-sticker-container flex items-center justify-center w-full py-12">
+          <div className="level-sticker-container flex items-center justify-center w-full py-8">
             <div className="level-sticker flex items-center justify-center w-full">
-              <div className={`sticker-box flex relative items-center justify-center ${userLevel >= level_data.length ? "w-80" : "-rotate-8 w-60"}`}>
-                <div className="sticker-text absolute top-[24%] left-[57%]">{userData?.count}</div>
+              <div className={`sticker-box flex relative items-center justify-center ${userLevel >= level_data.length ? "w-70" : "-rotate-8 w-50"}`}>
+                <div className="sticker-text text-sm absolute top-[23%] left-[57%]">{userData?.count}</div>
                 <Image src={`/image/sticker/record/record_level_${userLevel}.png`} alt={`레벨 ${userLevel} 스티커`} width={300} height={200} className="w-full h-full object-cover" />
               </div>
             </div>
           </div>
           <div className="flex flex-col flex-1/3 items-center justify-center w-full">
-            <div className="level flex items-center justify-center gap-2 mb-3">
-              <div className="level-value text-xs text-white border-white border-1 px-1">레벨{userLevel >= level_data.length ? "MAX" : userLevel}</div>
-              <div className="level-name font-bold text-lg text-white">{level_data[userLevel - 1].name}</div>
+            <div className="level flex items-center justify-center gap-2 mb-2">
+              <div className="level-value text-xs font-light text-white border-white border-1 px-0.5">레벨{userLevel >= level_data.length ? "MAX" : userLevel}</div>
+              <div className="level-name font-semibold text-lg text-white">{level_data[userLevel - 1].name}</div>
             </div>
             <ProgressBar exp={userData.exp} level={userLevel} />
           </div>
         </div>
       </div>
 
-      <div className="container w-full flex-grow p-8">
+      <div className="container w-full p-8 overflow-y-auto">
         {recordList}
       </div>
     </div>

@@ -7,7 +7,7 @@ import { useGlobalContext } from "../context/globalContext";
 import { situation_data } from "../data/situationData";
 
 export function getImageUrl(situation) {
-    return `/image/situation/potato_situation_${situation?.id}.png`;
+  return `/image/situation/potato_situation_${situation?.id}.png`;
 }
 
 export default function SituationPage() {
@@ -200,27 +200,27 @@ export default function SituationPage() {
 
     if (!isLoading) {
 
-    const startCounterTimer = setTimeout(() => {
-      setIsCounterStarted(true);
-      setCounter(5);
-      const counterInterval = setInterval(() => {
-        setCounter((prev) => {
-          if (prev > 0) {
-            return prev - 1;
-          } else {
-            clearInterval(counterInterval);
-            setIsStarted(true);
-            startTimeRef.current = Date.now();
-            return 0;
-          }
-        });
-      }, 1000);
-    }, 3000);
+      const startCounterTimer = setTimeout(() => {
+        setIsCounterStarted(true);
+        setCounter(5);
+        const counterInterval = setInterval(() => {
+          setCounter((prev) => {
+            if (prev > 0) {
+              return prev - 1;
+            } else {
+              clearInterval(counterInterval);
+              startResponse();
+              startTimeRef.current = Date.now();
+              return 0;
+            }
+          });
+        }, 1000);
+      }, 3000);
 
-    return () => {
-      clearTimeout(startCounterTimer);
-      setIsCounterStarted(false);
-    };
+      return () => {
+        clearTimeout(startCounterTimer);
+        setIsCounterStarted(false);
+      };
 
     }
 
@@ -276,9 +276,9 @@ export default function SituationPage() {
   };
 
   const loadingAnimation = (
-    <div className="loading-container flex flex-col items-center justify-center h-screen w-screen fixed top-0 left-0 bg-white z-50 opacity-50">
-      <div className="loading-spinner animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gray-900"></div>
-      <span className="text-gray-500 text-lg ml-4">텍스트 변환중...</span>
+    <div className="loading-container flex flex-col items-center justify-center h-screen w-screen fixed top-0 left-0 bg-white z-[99] opacity-70">
+      <div className="loader h-16 w-16"></div>
+      <span className="opacity-50 text-lg ml-4">텍스트 변환중...</span>
     </div>
   );
 
@@ -287,8 +287,8 @@ export default function SituationPage() {
     <>
       <div className="text-container flex flex-col items-center justify-center bg-white rounded-t-md animate-text-slide-up relative">
         <div className="text-content w-full opacity-0 flex flex-col items-center h-full p-4 animate-text-content">
-          <h1 className="text-xl font-bold">{situationData?.title}</h1>
-          <div className="bubble-container flex flex-col w-full items-center gap-6 justify-center mt-4">
+          <h1 className="text-xl font-bold mt-2">{situationData?.title}</h1>
+          <div className="bubble-container flex flex-col w-full items-center gap-6 justify-center mt-8">
 
             <div className="bubble-left self-start bg-gray-300 px-8 py-2 rounded-full rounded-tl-none shadow-md max-w-xs opacity-0 translate-y-4 animate-bubble-left">
               <span>{situationData?.description}</span>
@@ -302,23 +302,9 @@ export default function SituationPage() {
               </div>
             </div>
           </div>
-
-
-          {isCounterStarted && (
-            <div className={`counter-overlay fixed inset-0 bg-black z-10 opacity-50 flex-1/3`}>
-              <div className="top-half flex justify-center items-center absolute h-1/2 w-full top-0">
-                <div className="counter text-white text-6xl font-bold animate-fade-in">
-                  {counter > 0 ? counter : "시작!"}
-                </div>
-              </div>
-            </div>
-          )}
-
-
-
           <div className="button-container justify-self-end mt-auto flex flex-col items-center justify-center w-full relative">
             <span className="text-xl text-gray-400 font-bold absolute">5초 뒤 답변 시작...</span>
-            <div className="animate-start-button cursor-pointer bg-black text-white rounded-lg capitalize font-bold text-xl flex items-center justify-center py-3 w-full opacity-0 z-50" onClick={startResponse}>
+            <div className="animate-start-button cursor-pointer bg-black text-white rounded-lg capitalize text-xl flex items-center justify-center py-4 w-full opacity-0 z-50" onClick={startResponse}>
               <span>바로 시작</span>
             </div>
           </div>
@@ -392,17 +378,16 @@ export default function SituationPage() {
 
   return (
     <div className="situation-page flex flex-col h-screen">
-      { recognizing && loadingAnimation }
+      {recognizing && loadingAnimation}
 
       <div className="cancel-button flex justify-center items-center self-start w-10 h-10 absolute top-4 left-4 z-20 mix-blend-difference"
         onClick={() => router.push("/")}>
         <Image src={"/icon/cancel_white.svg"} alt="cancel" width={48} height={48} />
       </div>
 
-
       <div
-      onClick={skipSituation}
-      className="skip-button flex justify-center items-center absolute top-4 right-4 py-2 px-4 z-20 bg-black rounded-full cursor-pointer">
+        onClick={skipSituation}
+        className="skip-button flex justify-center items-center absolute top-4 right-4 py-2 px-4 z-20 bg-black rounded-full cursor-pointer">
         <span className="text-white text-sm">이 상황 패스</span>
       </div>
 
@@ -410,7 +395,7 @@ export default function SituationPage() {
         <div className="situation-bubble-container flex flex-col w-full h-1/2 absolute top-0 left-0 p-4">
           <div className="situation-bubble flex flex-col self-start items-start justify-center justify-self-end mt-auto gap-1">
             <span className="text-white">{situationData?.name}</span>
-            <div className="bubble-left bg-gray-300 px-8 py-2 rounded-full rounded-tl-none shadow-md max-w-xs opacity-70 z-50 ">
+            <div className="bubble-left bg-gray-300 px-8 py-2 rounded-full rounded-tl-none shadow-md max-w-xs opacity-80 z-50 ">
               <span>{situationData?.description}</span>
             </div>
           </div>
@@ -418,6 +403,19 @@ export default function SituationPage() {
       )}
 
       <div className="bg-image w-full h-full bg-cover bg-center animate-bg-shrink -z-10">
+
+        {!isStarted && (
+          <div className={`${isCounterStarted && 'counter-overlay'} absolute inset-0 z-10 flex justify-center items-center overflow-hidden bg-[rgba(0,0,0,0.7)]`}>
+            <div className="crossline absolute h-full w-full top-0"></div>
+            <div className="circle circle1"></div>
+            <div className="circle circle2"></div>
+            {isCounterStarted && (<div className="needle"></div>)}
+            <div className="counter text-white text-9xl font-black animate-fade-in absolute z-10">
+              {counter}
+            </div>
+          </div>
+        )}
+
         <Image
           src={getImageUrl(situationData)}
           alt="situation"
@@ -429,7 +427,7 @@ export default function SituationPage() {
 
       {isStarted ? (
         <div className="text-container flex flex-col h-1/2 items-center justify-between bg-white rounded-t-md p-4 px-8">
-          
+
           {responseType === "voice" ? voiceResponse : textResponse}
         </div>
       ) : situationIntro}

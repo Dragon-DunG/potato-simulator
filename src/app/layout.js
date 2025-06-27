@@ -32,11 +32,12 @@ export default function RootLayout({ children }) {
       <body
         className={`${pretendard.className} ${pretendard.className} antialiased`}
       >
+        <div className="mx-auto h-screen sm:aspect-[9/19] max-w-[640px]">
         <GlobalContextProvider>
           <ClientInitializer />
           {children}
         </GlobalContextProvider>
-
+        </div>
       </body>
     </html>
   );

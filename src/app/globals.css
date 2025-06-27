@@ -192,10 +192,10 @@ body {
 
 @keyframes countdown {
   0% {
-    background-color: #000000;
+    background-color: rgba(0, 0, 0, 0.7);
   }
   100% {
-    background-color: #800000;
+    background-color: rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -226,9 +226,30 @@ body {
   }
 }
 
+@keyframes counter {
+  0% {
+    transform: rotate(-90deg);
+  }
+  
+  100% {
+    transform: rotate(270deg);
+  }
+}
+
+  @keyframes rotation {
+  0% {
+      transform: rotate(0deg);
+  }
+  100% {
+      transform: rotate(360deg);
+  }
+  } 
 
 
+/* --- 커스텀 클래스 --- */
 
+
+/* 상황 시작 애니메이션 */
 .animate-bg-shrink {
   animation: bg-shrink 0.7s ease-out forwards;
 }
@@ -267,9 +288,7 @@ body {
   animation-delay: 0.4s;
 }
 
-.counter-overlay {
-  animation: countdown 5s ease-in-out forwards;
-}
+/* 파형 애니메이션 */
 
 .speaker .wave:nth-child(1) {
   animation: ripple 2s linear infinite;
@@ -286,6 +305,75 @@ body {
 .animate-slide-out {
   animation: slide-out 0.3s ease-in-out forwards;
 }
+
+/* 카운터 */
+
+.counter-overlay {
+  animation: countdown 5s ease-in-out forwards;
+}
+
+.crossline:before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 1.5px;
+  background: white;
+}
+
+.crossline:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5px;
+  height: 100%;
+  background: white;
+}
+
+.circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.circle.circle2 {
+  width: 45%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-width: 1.5px;
+}
+
+.needle {
+  position: absolute;
+  top: calc(50% - 2px);
+  left: 50%;
+  height: 1.5px;
+  width: 1200px;
+  background: white;
+  animation: counter 1s linear infinite;
+  transform-origin: left;
+}
+
+/* 로딩 애니메이션 */
+.loader {
+    border: 5px solid #FFF;
+    border-bottom-color: var(--color-primary);
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    }
 
 
 

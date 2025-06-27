@@ -6,12 +6,21 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getImageUrl } from "../situation/page";
 import { getUserId, uploadResult } from "../firebase";
+import { level_data } from "../data/levelData";
 
 export default function ResultPage() {
-  const { transcription, duration, situationData, fetchAndCacheUser } = useGlobalContext();
+  const { transcription, duration, situationData, fetchAndCacheUser, userData } = useGlobalContext();
   const [responsType, setResponseType] = useState("voice");
   const router = useRouter();
   const savedRef = useRef(false); // 저장 여부를 확인하기 위한 ref
+  const offset = 1; // 속도 측정 오프셋
+
+  const getLevel = () => {
+    const userExp = userData?.exp || 0; // 기본값 설정
+    const levelIdx = level_data.findIndex((level) => userExp < level.exp);
+    const userLevel = levelIdx > 0 ? levelIdx : 1; // 레벨이 없으면 1로 설정
+    return userLevel;
+  }
 
   useEffect(() => { // firestore에 결과 저장
     const saveResult = async () => {
@@ -22,11 +31,10 @@ export default function ResultPage() {
       savedRef.current = true; // 저장 완료 플래그 설정
       const userId = await getUserId();
       const resultData = makeResultData();
+      if (resultData.resultType === "silence") return; // silence인 경우 저장하지 않음
       await uploadResult(userId, resultData).then(() => { fetchAndCacheUser(); }); // 결과 저장 후 사용자 데이터 갱신
       console.log("결과 저장 완료:", resultData);
     };
-    const resultType = getResultType();
-    if (resultType === "silence") return; // silence인 경우 저장하지 않음
     saveResult();
   }, [situationData, duration]);
 
@@ -37,9 +45,9 @@ export default function ResultPage() {
     if (duration === 0) return "silence"; // duration이 0인 경우 처리
     const speed = wordsCount / duration; // 초당 음절 수
     let speedType = "normal";
-    if (speed > avgPerSecond) {
+    if (speed > avgPerSecond + offset) {
       speedType = "fast";
-    } else if (speed < avgPerSecond) {
+    } else if (speed < avgPerSecond - offset) {
       speedType = "slow";
     } else {
       speedType = "normal";
@@ -85,7 +93,6 @@ export default function ResultPage() {
       <div className="bg-image w-full h-1/3 bg-cover bg-center justify-self-start relative" >
         <div className="overlay absolute inset-0 bg-black opacity-50 h-full w-full">
         </div>
-        {/* <div className="text-overlay absolute inset-0 flex self-end py-2 bg-gray-300 opacity-70 justify-center text-white">한줄평</div> */}
         <Image
           src={getImageUrl(situationData)}
           alt="상황 이미지"
@@ -93,6 +100,22 @@ export default function ResultPage() {
           height={500}
           className="object-cover w-full h-full"
         />
+        <div className="level-sticker-container flex items-center justify-center w-full py-8 absolute inset-0">
+          {getResultType() === "silence" ? (
+            <div className="silence-sticker flex items-center justify-center">
+              <div className="sticker-box flex relative items-center justify-around gap-4">
+                <div className="w-4 h-4 bg-white rounded-full"></div>
+                <div className="w-4 h-4 bg-white rounded-full"></div>
+                <div className="w-4 h-4 bg-white rounded-full"></div>
+              </div>
+            </div>
+          ) : (
+            <div className={`sticker-box flex relative items-center justify-center ${getLevel() >= level_data.length ? "w-100" : "-rotate-8 w-80"}`}>
+              <div className="sticker-text text-lg absolute top-[24%] left-[57%]">{userData?.count}</div>
+              <Image src={`/image/sticker/result/result_level_${getLevel()}.png`} alt={`레벨 ${getLevel()} 스티커`} width={300} height={200} className="w-full h-full object-cover" />
+            </div>
+          )}
+        </div>
       </div>
       <div className="text-container w-full flex-grow bg-white p-6">
         {getResultType() === "silence" ?
@@ -101,7 +124,7 @@ export default function ResultPage() {
               <span className="text-primary">아무 말도</span>
               <span> 하지 않았어요</span>
             </h1>
-            <div className="text-gray-500 mb-8">
+            <div className="opacity-50 mb-8">
               <p>할 말이 떠오르지 않았나요?</p>
               <p>다음 번엔 자신있게 말해보세요!</p>
             </div>
@@ -135,7 +158,7 @@ export default function ResultPage() {
             <h1 className="text-3xl font-bold mb-4">
               말했어요
             </h1>
-            <div className="text-gray-500 mb-8">
+            <div className="opacity-50 mb-8">
               <p className="">
                 <span className="underline font-bold">{getDurationText()}</span>
                 <span>간의 스피치 동안</span>
@@ -156,7 +179,7 @@ export default function ResultPage() {
 
 
       </div>
-      <div className="w-full flex gap-4 justify-center absolute bottom-0 p-4 bg-white">
+      <div className="w-full flex gap-4 justify-center self-end mt-auto p-4 bg-white">
         <div className="flex-grow button rounded-xl bg-gray-200 p-4 text-center text-xl cursor-pointer" onClick={() => router.push("/")}>메인으로</div>
         <div className="flex-grow button rounded-xl bg-black text-white p-4 text-center text-xl cursor-pointer"
           onClick={() => router.push('/?start=true')}>

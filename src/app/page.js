@@ -169,7 +169,7 @@ function Home() {
 
   const introPage = (
     <>
-      <div className="background-container absolute inset-0 flex items-center justify-center -z-100">
+      <div className="background-container w-full absolute inset-0 flex items-center justify-center -z-100">
         <Image src={"/image/background/main_temp.png"} alt="intro background png" fill className="object-cover" />
       </div>
       <div className="button-group flex flex-col items-center justify-end h-full w-full grow pb-4">
@@ -219,7 +219,7 @@ function Home() {
   );
 
   return (
-    <div className="main flex flex-col items-center justify-between min-h-screen p-4 h-full">
+    <div className="main flex flex-col items-center justify-between min-h-screen p-4 h-full w-full relative">
       {startPageOpen ? (
         <>
           {startPage}
