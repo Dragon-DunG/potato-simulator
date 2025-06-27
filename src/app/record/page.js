@@ -45,9 +45,11 @@ export default function RecordPage() {
   const router = useRouter();
   const [userData, setUserData] = useState({});
   const [userLevel, setUserLevel] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const getUserData = async () => {
+      setIsLoading(true);
       const userId = await getUserId();
       if (userId) {
         const data = await getUserRecords(userId);
@@ -67,6 +69,7 @@ export default function RecordPage() {
         console.error("사용자 ID를 가져오는 데 실패했습니다.");
         setUserData({ records: [], exp: 0, count: 0 });
       }
+      setIsLoading(false);
     }
     getUserData();
   }
@@ -74,7 +77,7 @@ export default function RecordPage() {
 
   const recordList = (
     <div className="flex flex-col items-center justify-center w-full">
-      <div className="flex flex-col items-center w-full gap-3">
+      <div className="flex flex-col items-center w-full grow gap-3">
         {userData?.records?.length === 0 && (
           <div className="no-records flex items-center justify-center w-full h-full opacity-50 ">
             답변 기록을 쌓아보세요!
@@ -94,20 +97,21 @@ export default function RecordPage() {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-background-gray">
-      <div className={`title-box w-full relative flex flex-col justify-between items-center justify-self-start mb-auto`}>
-        <div className={`title-box-background absolute top-0 left-0 w-full h-full rounded-b-xl ${level_data[userLevel - 1].bgColor}`}>
+      <div className={`title-box w-full h-auto relative flex flex-col justify-between items-center justify-self-start p-7 transition-all`}>
+        <div className={`title-box-background absolute inset-0 w-full h-full rounded-b-xl overflow-clip ${level_data[userLevel - 1].bgColor}`}>
           {userLevel >= level_data.length &&
-            <div className="overlay absolute inset-0 bg-maxlevel-overlay rounded-b-xl"></div>
+            <div className="overlay absolute inset-0 bg-maxlevel-overlay"></div>
           }
         </div>
-        <div className="title-box-inner relative w-full h-full flex flex-col items-center justify-between p-7">
-          <div className="w-full flex justify-between items-center justify-self-start mb-auto">
-            <div className="cancel-button flex justify-start items-center absolute w-10 h-10 cursor-pointer" onClick={() => router.back()}>
-              <Image src={"/icon/back_white_fit.svg"} alt="cancel" width={10} height={10} />
-            </div>
-            <h1 className="self-center mx-auto font-semibold text-white">나의 기록</h1>
+        <div className="title-box-header w-full flex justify-between items-center justify-self-start">
+          <div className="cancel-button flex justify-start items-center absolute w-10 h-10 cursor-pointer" onClick={() => router.back()}>
+            <Image src={"/icon/back_white_fit.svg"} alt="cancel" width={10} height={10} />
           </div>
-          <div className="level-sticker-container flex items-center justify-center w-full py-8">
+          <h1 className="self-center mx-auto font-semibold text-white z-50">나의 기록</h1>
+        </div>
+        
+        <div className={`title-box-inner relative w-full flex flex-col items-center justify-start overflow-hidden ${isLoading ? "" : "open" }`}>
+          <div className="level-sticker-container flex items-center justify-center w-full p-8">
             <div className="level-sticker flex items-center justify-center w-full">
               <div className={`sticker-box flex relative items-center justify-center ${userLevel >= level_data.length ? "w-70" : "-rotate-8 w-50"}`}>
                 <div className="sticker-text text-sm absolute top-[23%] left-[57%]">{userData?.count}</div>
@@ -125,7 +129,7 @@ export default function RecordPage() {
         </div>
       </div>
 
-      <div className="container w-full p-8 overflow-y-auto">
+      <div className="container w-full grow p-8 overflow-y-auto">
         {recordList}
       </div>
     </div>

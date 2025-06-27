@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useGlobalContext } from "../context/globalContext";
 import { situation_data } from "../data/situationData";
 
@@ -148,6 +148,10 @@ export default function SituationPage() {
   }
 
   useEffect(() => {
+    return () => stopRecording();
+  }, []);
+
+  useEffect(() => {
     if (audioBlob) {
       setRecognizing(true);
       console.log("Audio Blob:", audioBlob);
@@ -287,7 +291,7 @@ export default function SituationPage() {
     <>
       <div className="text-container flex flex-col items-center justify-center bg-white rounded-t-md animate-text-slide-up relative">
         <div className="text-content w-full opacity-0 flex flex-col items-center h-full p-4 animate-text-content">
-          <h1 className="text-xl font-bold mt-2">{situationData?.title}</h1>
+          <h1 className="text-xl font-bold mt-2  whitespace-pre-wrap text-center">{situationData?.title}</h1>
           <div className="bubble-container flex flex-col w-full items-center gap-6 justify-center mt-8">
 
             <div className="bubble-left self-start bg-gray-300 px-8 py-2 rounded-full rounded-tl-none shadow-md max-w-xs opacity-0 translate-y-4 animate-bubble-left">
@@ -404,7 +408,7 @@ export default function SituationPage() {
 
       <div className="bg-image w-full h-full bg-cover bg-center animate-bg-shrink -z-10">
 
-        {!isStarted && (
+        {isCounterStarted && !isStarted && (
           <div className={`${isCounterStarted && 'counter-overlay'} absolute inset-0 z-10 flex justify-center items-center overflow-hidden bg-[rgba(0,0,0,0.7)]`}>
             <div className="crossline absolute h-full w-full top-0"></div>
             <div className="circle circle1"></div>

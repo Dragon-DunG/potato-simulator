@@ -12,10 +12,12 @@ export default function SituationRecordPage() {
   const params = useParams();
   const situationId = params.situationId;
   const [recordData, setRecordData] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
 
   useEffect(() => {
     const fetchRecordData = async () => {
+      setIsLoading(true);
       const userId = await getUserId();
       if (!situationId) {
         console.error("상황 ID가 없습니다.");
@@ -36,6 +38,7 @@ export default function SituationRecordPage() {
         id: situationId,
         records: records,
       });
+      setIsLoading(false);
     }
     fetchRecordData();
   }
@@ -98,9 +101,9 @@ export default function SituationRecordPage() {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-background-gray">
-      <div className={`title-box w-full relative flex flex-col justify-between items-center justify-self-start rounded-b-xl overflow-hidden h-1/3`}>
-        <div className={`title-box-container absolute top-0 left-0 w-full h-full`}>
-          <div className="overlay absolute inset-0 bg-gradient-to-b from-black to-transparent"></div>
+      <div className={`title-box w-full h-auto relative flex flex-col justify-between items-center justify-self-start rounded-b-xl p-7`}>
+        <div className={`title-box-container absolute top-0 left-0 w-full h-full rounded-b-xl overflow-hidden`}>
+          <div className="overlay absolute inset-0 bg-gradient-to-b from-black to-neutral-300 backdrop-blur-[2px] mix-blend-multiply"></div>
           <Image
             src={`/image/situation/potato_situation_${situationId}.png`}
             alt={`상황 ${situationId} 이미지`}
@@ -109,18 +112,18 @@ export default function SituationRecordPage() {
             className="object-cover w-full h-full"
           />
         </div>
-        <div className="title-box-inner relative w-full h-full flex flex-col items-center justify-between p-7">
-          <div className="w-full flex justify-between items-center justify-self-start mb-auto">
-            <div className="cancel-button flex justify-start items-center absolute w-10 h-10 cursor-pointer" onClick={() => router.back()}>
-              <Image src={"/icon/back_white_fit.svg"} alt="cancel" width={10} height={10} />
-            </div>
-            <h1 className="title self-center mx-auto w-1/2 line-clamp-1 overflow-ellipsis text-sm text-white">
-              {recordData?.id ? situation_data[situationId - 1]?.title : "기록"}
-            </h1>
+        <div className="w-full flex justify-between items-center justify-self-start mb-auto">
+          <div className="cancel-button flex justify-start items-center absolute w-10 h-10 cursor-pointer" onClick={() => router.back()}>
+            <Image src={"/icon/back_white_fit.svg"} alt="cancel" width={10} height={10} />
           </div>
+          <h1 className="title self-center text-center mx-auto w-1/2 line-clamp-1 overflow-ellipsis text-sm text-white z-50">
+            {recordData?.id ? situation_data[situationId - 1]?.title : "로딩중..."}
+          </h1>
+        </div>
+        <div className={`title-box-inner relative w-full h-[24vh] flex flex-col items-center justify-between overflow-hidden ${isLoading ? "" : "open"}`}>
           <div className="situ-title-container flex flex-col grow items-start justify-between gap-2 w-full text-white mb-2 mt-10">
-            <div className="title-text text-xl font-semibold w-3/4 text-left break-keep text-white">
-              {situation_data[situationId - 1]?.title || "기록"}
+            <div className="title-text text-xl font-semibold w-full text-left text-white  whitespace-pre-wrap break-keep">
+              {situation_data[situationId - 1]?.title || ""}
             </div>
             <div className="number-of-records text-xs font-light">
               <span className="font-semibold">{recordData?.records?.length || 0}번</span> 해봤어요.
@@ -129,7 +132,7 @@ export default function SituationRecordPage() {
         </div>
       </div>
 
-      <div className="container w-full flex-grow p-8">
+      <div className="container w-full flex-grow p-5 overflow-y-auto">
         {recordList}
       </div>
     </div>

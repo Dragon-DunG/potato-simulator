@@ -245,6 +245,15 @@ body {
   }
   } 
 
+  @keyframes drawer {
+  0% {
+    height: 0;
+  }
+  100% {
+    height: auto;
+  }
+  }
+
 
 /* --- 커스텀 클래스 --- */
 
@@ -297,6 +306,8 @@ body {
 .speaker .wave:nth-child(2) {
   animation: ripple 2s 1s linear infinite;
 }
+
+/* 롤링 애니메이션 */
 
 .animate-slide-in {
   animation: slide-in 0.3s ease-in-out forwards;
@@ -375,5 +386,16 @@ body {
     animation: rotation 1s linear infinite;
     }
 
+
+/* 박스 애니메이션 */
+.title-box-inner {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease-in-out;
+}
+
+.title-box-inner.open {
+  max-height: 700px;
+}
 
 
