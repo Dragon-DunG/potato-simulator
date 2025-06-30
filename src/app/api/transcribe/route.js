@@ -1,7 +1,6 @@
 import { SpeechClient } from "@google-cloud/speech";
 import fs from "fs";
 import path from "path";
-import Ffmpeg from "fluent-ffmpeg";
 
 export const config = {
   api: {
@@ -10,14 +9,29 @@ export const config = {
 };
 
 const speechClient = new SpeechClient({
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-});
+  credentials: {
+    client_email: process.env.GOOGLE_APPLICATION_CLIENT_EMAIL,
+    private_key: process.env.GOOGLE_APPLICATION_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  },
+  projectId: process.env.GOOGLE_APPLICATION_PROJECT_ID,
+}
+);
+
+async function isSpeechClientValid() {
+  try {
+    await speechClient.getProjectId();
+    return true;
+  } catch (error) {
+    console.error("SpeechClient is not valid:", error);
+    return false;
+  }
+}
 
 export async function POST(req) {
-  const keyFilePath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if (!fs.existsSync(keyFilePath)) {
-    console.error("Key file does not exist:", keyFilePath);
-    return new Response(JSON.stringify({ error: "Key file not found" }), { status: 500 });
+  // Google Speech-to-Text 클라이언트 유효성 검사
+  const isValidClient = await isSpeechClientValid();
+  if (!isValidClient) {
+    return new Response(JSON.stringify({ error: "Invalid Google Speech-to-Text client" }), { status: 500 });
   }
 
   try {
@@ -27,7 +41,6 @@ export async function POST(req) {
       fs.mkdirSync(tempDir);
     }
     const tempFilePath = path.join(tempDir, "uploaded-audio.webm");
-    const flacFilePath = path.join(tempDir, "converted-audio.flac");
 
     // 2. Request의 body를 읽어서 파일로 저장
     const fileStream = fs.createWriteStream(tempFilePath);
@@ -59,35 +72,6 @@ export async function POST(req) {
       throw new Error("Audio file is empty");
     }
 
-    // // 3. FLAC 형식으로 변환
-    // console.log("Converting audio to FLAC format...");
-    // await new Promise((resolve, reject) => {
-    //   Ffmpeg(tempFilePath)
-    //     .output(flacFilePath)
-    //     .audioFrequency(16000) // 샘플링 레이트 설정
-    //     .audioChannels(1) // 모노 채널 설정
-    //     .on("end", () => {
-    //       console.log("Audio conversion to FLAC completed");
-    //       resolve();
-    //     })
-    //     .on("error", (err) => {
-    //       console.error("Error during audio conversion:", err);
-    //       reject(err);
-    //     })
-    //     .run();
-    // });
-
-    // if (!fs.existsSync(flacFilePath)) {
-    //   throw new Error("FLAC file was not created");
-    // }
-
-    // const flacFileSize = fs.statSync(flacFilePath).size;
-    // console.log("FLAC file size:", flacFileSize);
-
-    // if (flacFileSize === 0) {
-    //   throw new Error("FLAC file is empty");
-    // }
-
     // 3. Google Speech-to-Text API 호출
     const audio = fs.readFileSync(tempFilePath);
     const audioBytes = audio.toString("base64");
@@ -109,7 +93,7 @@ export async function POST(req) {
 
     console.log("Speech-to-Text API request:", request);
 
-    const [operation] = await speechClient.longRunningRecognize(request);
+    const [operation] = speechClient.longRunningRecognize(request);
     const [response] = await operation.promise();
     const transcription = response.results
       .map((result) => result.alternatives[0].transcript)
@@ -117,13 +101,16 @@ export async function POST(req) {
 
     console.log("Transcription:", transcription);
 
-    // 4. 임시 파일 삭제
-    fs.unlinkSync(tempFilePath);
-    // fs.unlinkSync(flacFilePath);
-
     return new Response(JSON.stringify({ text: transcription }), { status: 200 });
   } catch (error) {
     console.error("Error processing request:", error);
     return new Response(JSON.stringify({ error: "Failed to process request", details: error.message }), { status: 500 });
+  } finally {
+    // 4. 임시 파일 삭제
+    const tempFilePath = path.join(process.cwd(), "temp", "uploaded-audio.webm");
+    if (fs.existsSync(tempFilePath)) {
+      fs.unlinkSync(tempFilePath);
+      console.log("Temporary file deleted:", tempFilePath);
+    }
   }
 }
