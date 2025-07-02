@@ -169,8 +169,10 @@ export const fetchUserData = async () => {
       console.log("User data cached:", userCache);
       return userCache;
     } else {
-      console.log("User document does not exist.");
-      return null;
+      // 사용자 문서가 존재하지 않는 경우 새로 생성
+      await setDoc(userDocRef, { exp: 0, count: 0, doneIds: [] });
+      console.log("User document created:", userId);
+      return { id: userId, exp: 0, count: 0, doneIds: [] };
     }
   } catch (error) {
     console.error("Error fetching user data:", error);

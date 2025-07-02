@@ -33,7 +33,9 @@ export default function ResultPage() {
   }
 
   const nextSituationHandler = async () => {
-    if (!userData) await fetchAndCacheUser(); // 사용자 데이터가 없으면 갱신
+    if (!userData) {
+      await fetchAndCacheUser();
+    }
     if (userData) {
       const excludeIds = [...passedSituations, ...userData.doneIds || []]; // 이미 완료한 상황 제외
       const nextIndex = getRandomIndex(excludeIds);
