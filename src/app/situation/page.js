@@ -359,7 +359,6 @@ export default function SituationPage() {
         <div className="text-content w-full opacity-0 flex flex-col items-center h-full p-4 animate-text-content">
           <h1 className="text-xl font-bold mt-2  whitespace-pre-wrap text-center">{situationData?.title}</h1>
           <div
-            key={situationData?.id}
             className="bubble-container flex flex-col w-full items-center gap-6 justify-center mt-8">
 
             <div className="bubble-left self-start bg-gray-300 px-8 py-2 rounded-full rounded-tl-none shadow-md max-w-xs opacity-0 translate-y-4 animate-bubble-left">
@@ -450,7 +449,7 @@ export default function SituationPage() {
 
 
   return (
-    <div className="situation-page w-full flex flex-col h-full relative overflow-hidden">
+    <div key={situationData?.id} className="situation-page w-full flex flex-col h-full relative overflow-hidden">
       {recognizing && loadingAnimation}
 
       <div className="button-group flex items-center justify-between w-full absolute top-0 left-0 z-20">
@@ -479,7 +478,9 @@ export default function SituationPage() {
         </div>
       )}
 
-      <div className="bg-image w-full h-full bg-cover bg-center animate-bg-shrink -z-10 overflow-hidden">
+      <div
+        key={situationData?.id}
+        className="bg-image w-full h-full bg-cover bg-center animate-bg-shrink -z-10 overflow-hidden">
 
         {isCounterStarted && !isStarted && (
           <div className={`${isCounterStarted && 'counter-overlay'} absolute inset-0 z-10 flex justify-center items-center overflow-hidden bg-[rgba(0,0,0,0.7)]`}>
