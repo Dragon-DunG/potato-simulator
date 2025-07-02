@@ -7,10 +7,12 @@ import { useRouter } from "next/navigation";
 import { getImageUrl } from "../situation/page";
 import { getUserId, uploadResult } from "../firebase";
 import { level_data } from "../data/levelData";
+import { situation_data } from "../data/situationData";
 
 export default function ResultPage() {
-  const { transcription, duration, situationData, fetchAndCacheUser, userData } = useGlobalContext();
-  const [responsType, setResponseType] = useState("voice");
+  const { transcription, duration, situationData, setSituationData, fetchAndCacheUser, userData, passedSituations } = useGlobalContext();
+  const [responseType, setResponseType] = useState("voice");
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const savedRef = useRef(false); // 저장 여부를 확인하기 위한 ref
   const offset = 1; // 속도 측정 오프셋
@@ -22,8 +24,45 @@ export default function ResultPage() {
     return userLevel;
   }
 
+  const getRandomIndex = (excludeIds) => {
+    let randomIndex = 0;
+    do {
+      randomIndex = Math.floor(Math.random() * situation_data.length);
+    } while (excludeIds.includes(randomIndex + 1) || (randomIndex + 1) === situationData?.id);
+    return randomIndex;
+  }
+
+  const nextSituationHandler = async () => {
+    if (!userData) await fetchAndCacheUser(); // 사용자 데이터가 없으면 갱신
+    if (userData) {
+      const excludeIds = [...passedSituations, ...userData.doneIds || []]; // 이미 완료한 상황 제외
+      const nextIndex = getRandomIndex(excludeIds);
+      const nextSituation = situation_data[nextIndex];
+      if (!nextSituation) {
+        console.error("다음 상황을 찾을 수 없습니다.");
+        return;
+      }
+      setSituationData(nextSituation);
+      setResponseType("voice"); // 다음 상황으로 넘어갈 때 응답 유형 초기화
+      savedRef.current = false; // 저장 완료 플래그 초기화
+      router.push(`/situation?index=${nextIndex}&responseType=${responseType}`); // 상황 페이지로 이동}
+    }
+  }
+
+  useEffect(() => {
+    if (!isLoading) return;
+    const params = new URLSearchParams(window.location.search);
+    const responseTypeParam = params.get("responseType");
+    if (responseTypeParam) {
+      setResponseType(responseTypeParam);
+    }
+    setIsLoading(false);
+  }, [isLoading]);
+
   useEffect(() => { // firestore에 결과 저장
     const saveResult = async () => {
+      console.log("transcription:", transcription);
+      console.log("duration:", duration);
       if (!situationData) return;
       if (!transcription) return; // transcription이 비어있는 경우 처리
       if (duration === 0) return; // duration이 0인 경우 처리
@@ -36,18 +75,18 @@ export default function ResultPage() {
       console.log("결과 저장 완료:", resultData);
     };
     saveResult();
-  }, [situationData, duration]);
+  }, [situationData, duration, transcription, fetchAndCacheUser]);
 
   const getResultType = () => {
-    const avgPerSecond = 4; // 평균 초당 음절 수
+    const avgPerSecond = responseType === "voice" ? 4 : 4 * 3;
     const wordsCount = getTextCount(); // 음절 수
     if (wordsCount === 0) return "silence"; // 음절 수가 0인 경우 처리
     if (duration === 0) return "silence"; // duration이 0인 경우 처리
     const speed = wordsCount / duration; // 초당 음절 수
     let speedType = "normal";
-    if (speed > avgPerSecond + offset) {
+    if (speed < avgPerSecond + offset) {
       speedType = "fast";
-    } else if (speed < avgPerSecond - offset) {
+    } else if (speed > avgPerSecond - offset) {
       speedType = "slow";
     } else {
       speedType = "normal";
@@ -89,7 +128,7 @@ export default function ResultPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
+    <div className="flex flex-col items-center justify-center h-dvh">
       <div className="bg-image w-full h-1/3 bg-cover bg-center justify-self-start relative" >
         <div className="overlay absolute inset-0 bg-black opacity-50 h-full w-full">
         </div>
@@ -111,7 +150,7 @@ export default function ResultPage() {
             </div>
           ) : (
             <div className={`sticker-box flex relative items-center justify-center ${getLevel() >= level_data.length ? "w-100" : "-rotate-8 w-80"}`}>
-              <div className="sticker-text text-lg absolute top-[24%] left-[57%]">{userData?.count}</div>
+              <div className="sticker-text text-lg absolute top-[24%] left-[54%] text-center w-8">{userData?.count}</div>
               <Image src={`/image/sticker/result/result_level_${getLevel()}.png`} alt={`레벨 ${getLevel()} 스티커`} width={300} height={200} className="w-full h-full object-cover" />
             </div>
           )}
@@ -156,7 +195,7 @@ export default function ResultPage() {
               }
             </h1>
             <h1 className="text-3xl font-bold mb-4">
-              말했어요
+              {responseType === "voice" ? "말했어요" : "답했어요"}
             </h1>
             <div className="opacity-50 mb-8">
               <p className="">
@@ -182,7 +221,7 @@ export default function ResultPage() {
       <div className="w-full flex gap-4 justify-center self-end mt-auto p-4 bg-white">
         <div className="flex-grow button rounded-xl bg-gray-200 p-4 text-center text-xl cursor-pointer" onClick={() => router.push("/")}>메인으로</div>
         <div className="flex-grow button rounded-xl bg-black text-white p-4 text-center text-xl cursor-pointer"
-          onClick={() => router.push('/?start=true')}>
+          onClick={nextSituationHandler}>
           다음상황!</div>
       </div>
 

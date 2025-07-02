@@ -103,8 +103,12 @@ export async function POST(req) {
 
     return new Response(JSON.stringify({ text: transcription }), { status: 200 });
   } catch (error) {
-    console.error("Error processing request:", error);
-    return new Response(JSON.stringify({ error: "Failed to process request", details: error.message }), { status: 500 });
+    console.error("Error processing request:", error.message);
+    if (error.message?.includes("object is not iterable") || error.message?.includes("Temp file was not created")) {
+      return new Response(JSON.stringify({ text: "" }), { status: 200 });
+    } else {
+      return new Response(JSON.stringify({ error: "Failed to process request", details: error.message }), { status: 500 });
+    }
   } finally {
     // 4. 임시 파일 삭제
     const tempFilePath = path.join(process.cwd(), "temp", "uploaded-audio.webm");

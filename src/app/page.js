@@ -15,7 +15,7 @@ export default function HomeWrapper() {
 }
 
 function Home() {
-  const initialAnimationSpeed = 500; // 초기 애니메이션 속도 설정
+  const initialAnimationSpeed = 1000; // 초기 애니메이션 속도 설정
   const { situationData, setSituationData, passedSituations, userData, fetchAndCacheUser } = useGlobalContext();
   const [startPageOpen, setStartPageOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -62,17 +62,17 @@ function Home() {
 
     const slowDownAnimation = () => {
       setSlowDown(true);
-      if (speed > 800) {
+
+      speed += 100;
+      setAnimationSpeed(speed);
+
+      if (speed > 1200) {
         const randomIndex = getRandomIndex();
         setFinalIndex(randomIndex); // 최종 선택된 인덱스 설정
         setCurrentIndex(randomIndex); // 현재 인덱스 업데이트
         setIsAnimating(false);
         return;
       }
-
-      speed += 100;
-      setAnimationSpeed(speed);
-
       setTimeout(() => {
         const randomIndex = getRandomIndex();
         setCurrentIndex(randomIndex);
@@ -106,7 +106,7 @@ function Home() {
       slideTimeout.current = setTimeout(() => {
         setIsSliding(false);
         setPrevIndex(currentIndex); // 이전 인덱스 업데이트
-      }, 400);
+      }, 500);
     }
   }, [currentIndex]);
 
@@ -119,7 +119,7 @@ function Home() {
 
       // 1초 후 페이지 이동
       setTimeout(() => {
-        router.push(`/situation?responseType=${responseType}`);
+        router.push(`/situation?index=${finalIndex}&responseType=${responseType}`);
       }, 1000);
     }
   }, [finalIndex, responseType]);
@@ -255,7 +255,7 @@ function Home() {
   );
 
   return (
-    <div className="main flex flex-col items-center justify-between min-h-screen p-4 h-full w-full relative">
+    <div className="main flex flex-col items-center justify-between min-h-dvh p-4 h-full w-full relative">
       {startPageOpen ? (
         <>
           {startPage}

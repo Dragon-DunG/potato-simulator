@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGlobalContext } from "../context/globalContext";
 import { situation_data } from "../data/situationData";
 
@@ -11,7 +11,7 @@ export function getImageUrl(situation) {
 }
 
 export default function SituationPage() {
-  const { setTranscription, setDuration, situationData, setPassedSituations } = useGlobalContext();
+  const { setTranscription, setDuration, situationData, setSituationData, passedSituations, setPassedSituations, userData, fetchAndCacheUserData } = useGlobalContext();
   const [responseType, setResponseType] = useState("voice"); // "voice" or "text"
   const [isLoading, setIsLoading] = useState(true);
   const [counter, setCounter] = useState(5);
@@ -22,12 +22,34 @@ export default function SituationPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [responseText, setResponseText] = useState("");
   const [recognizing, setRecognizing] = useState(false);
+  const [responseDuration, setResponseDuration] = useState(0);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const audioContextRef = useRef(null);
   const barsRef = useRef([]);
   const startTimeRef = useRef(null);
+  const responseTextRef = useRef("");
+  const startCounterTimerRef = useRef(null);
+  const counterIntervalRef = useRef(null);
+  const responseTimerRef = useRef(null);
+  const audioBlobRef = useRef(null);
   const router = useRouter();
+
+  const resetState = () => {
+    stopRecording();
+    resetCounter();
+    setIsLoading(true);
+    setTranscription("");
+    setDuration(0);
+    setResponseText("");
+    setAudioBlob(null);
+    setRecognizing(false);
+    setResponseDuration(0);
+    setIsStarted(false);
+    setTimeRemaining(0);
+    startTimeRef.current = null;
+    responseTextRef.current = "";
+  }
 
   const startRecording = () => {
     console.log("Starting recording...");
@@ -83,6 +105,7 @@ export default function SituationPage() {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         console.log("Audio Blob size:", audioBlob.size);
         setAudioBlob(audioBlob);
+        audioBlobRef.current = audioBlob;
         audioChunksRef.current = []; // Clear chunks
       };
 
@@ -114,31 +137,42 @@ export default function SituationPage() {
     });
   };
 
-  const textSubmit = () => {
-    let duration = situationData?.time; // 기본값: 최대 시간
-    if (startTimeRef.current) {
-      duration = Math.round((Date.now() - startTimeRef.current) / 1000); // 최대 시간 초과 방지
-      if (situationData?.time && duration > situationData.time) {
-        duration = situationData.time;
-      }
-    }
+  const textSubmit = (duration, responseText) => {
+    console.log("Text submitted:", responseText);
+    const text = responseText.trim();
+    setTranscription(text);
     setDuration(duration);
-    console.log("Answer duration:", duration);
-    //2초 후에 텍스트 전송
+    setResponseText("");
     setTimeout(() => {
-      console.log("Text submitted:", responseText);
-      const text = responseText.trim();
-      setTranscription(text);
-
       router.push("/result?responseType=text");
-      setResponseText("");
-    }, 2000);
+    }, 0);
   }
 
-  const skipSituation = () => {
+  const getRandomIndex = (excludeIds) => {
+    let randomIndex = 0;
+    do {
+      randomIndex = Math.floor(Math.random() * situation_data.length);
+    } while (excludeIds.includes(randomIndex + 1) || (randomIndex + 1) === situationData?.id);
+    return randomIndex;
+  }
+
+  const skipSituation = async () => {
     setIsLoading(true);
-    setPassedSituations(prev => [...prev, situationData.id]);
-    router.push("/?start=true");
+    resetState();
+    const passedIds = [...passedSituations, situationData.id];
+    setPassedSituations(passedIds);
+    if (!userData) await fetchAndCacheUserData(); // 사용자 데이터가 없으면 갱신
+    if (userData) {
+      const excludeIds = [...passedIds, ...userData.doneIds || []]; // 이미 완료한 상황 제외
+      const randomIndex = getRandomIndex(excludeIds);
+      const nextSituation = situation_data[randomIndex];
+      if (!nextSituation) {
+        console.error("다음 상황을 찾을 수 없습니다.");
+        return;
+      }
+      setSituationData(nextSituation);
+      router.push(`/situation?index=${randomIndex}&responseType=${responseType}`);
+    }
   }
 
   const startResponse = () => {
@@ -151,8 +185,9 @@ export default function SituationPage() {
     return () => stopRecording();
   }, []);
 
-  useEffect(() => {
-    if (audioBlob) {
+  const recognize = (duration) => {
+    if (audioBlobRef.current) {
+      const audioBlob = audioBlobRef.current;
       setRecognizing(true);
       console.log("Audio Blob:", audioBlob);
       const audioUrl = URL.createObjectURL(audioBlob);
@@ -186,6 +221,7 @@ export default function SituationPage() {
         .then((data) => {
           console.log("Transcription:", data.text);
           setTranscription(data.text);
+          setDuration(duration);
           setRecognizing(false);
           router.push("/result?responseType=voice");
         })
@@ -193,41 +229,61 @@ export default function SituationPage() {
           console.error("Error:", error);
         });
     }
-  }, [audioBlob]);
+  }
+
+  const startCounter = () => {
+    startCounterTimerRef.current = setTimeout(() => {
+      setIsCounterStarted(true);
+      setCounter(5);
+      counterIntervalRef.current = setInterval(() => {
+        setCounter((prev) => {
+          if (prev > 0) {
+            return prev - 1;
+          } else {
+            clearInterval(counterIntervalRef.current);
+            startResponse();
+            startTimeRef.current = Date.now();
+            return 0;
+          }
+        });
+      }, 1000);
+    }, 3000);
+  };
+
+  const resetCounter = () => {
+    if (startCounterTimerRef.current) {
+      clearTimeout(startCounterTimerRef.current);
+      startCounterTimerRef.current = null;
+    }
+    if (counterIntervalRef.current) {
+      clearInterval(counterIntervalRef.current);
+      counterIntervalRef.current = null;
+    }
+    setIsCounterStarted(false);
+  };
+
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const responseTypeParam = params.get("responseType");
+    const indexParam = params.get("index");
     if (responseTypeParam) {
       setResponseType(responseTypeParam);
     }
-
-    if (!isLoading) {
-
-      const startCounterTimer = setTimeout(() => {
-        setIsCounterStarted(true);
-        setCounter(5);
-        const counterInterval = setInterval(() => {
-          setCounter((prev) => {
-            if (prev > 0) {
-              return prev - 1;
-            } else {
-              clearInterval(counterInterval);
-              startResponse();
-              startTimeRef.current = Date.now();
-              return 0;
-            }
-          });
-        }, 1000);
-      }, 3000);
-
-      return () => {
-        clearTimeout(startCounterTimer);
-        setIsCounterStarted(false);
-      };
-
+    if (!situationData) {
+      if (indexParam) {
+        const index = parseInt(indexParam, 10);
+        const situation = situation_data[index] || {};
+        setSituationData(situation);
+      }
     }
 
+    if (!isLoading) {
+      startCounter();
+      return () => {
+        resetCounter();
+      }
+    }
   }, [isLoading]);
 
   useEffect(() => {
@@ -236,24 +292,24 @@ export default function SituationPage() {
     }
   }, [situationData]);
 
-  useEffect(() => {
+  useEffect(() => { // 음성 응답 시작 시 녹음 시작
     if (isStarted && responseType === "voice") {
       startRecording();
     }
   }, [isStarted, responseType]);
 
-  useEffect(() => {
+  useEffect(() => { // 타이머 설정
     if (situationData?.time >= 0 && isStarted) {
-      setTimeRemaining(situationData?.time);
+      setTimeRemaining(responseType === "voice" ? situationData.time : situationData.time * 3); // 텍스트 응답은 3배
     }
 
-    const timer = setInterval(() => {
+    responseTimerRef.current = setInterval(() => {
       if (isStarted) {
         setTimeRemaining((prev) => {
           if (prev > 0) {
             return prev - 1;
           } else {
-            clearInterval(timer);
+            clearInterval(responseTimerRef.current);
             handleAnswerComplete();
             return 0;
           }
@@ -266,21 +322,31 @@ export default function SituationPage() {
   // 답변 완료 시 소요 시간 계산
   const handleAnswerComplete = () => {
     console.log("Answer completed");
-    let duration = situationData?.time; // 기본값: 최대 시간
+    clearInterval(responseTimerRef.current);
+    const maxDuration = responseType === "voice" ? situationData?.time : situationData?.time * 3;
+    let duration = maxDuration || 0; // 기본값 설정
     if (startTimeRef.current) {
       duration = Math.round((Date.now() - startTimeRef.current) / 1000);
       // 최대 시간 초과 방지
       if (situationData?.time && duration > situationData.time) {
-        duration = situationData.time;
+        duration = maxDuration;
       }
     }
-    setDuration(duration);
+    setResponseDuration(duration);
     stopRecording();
     console.log("Answer duration:", duration);
+    setTimeout(() => {
+      if (responseType === "text") {
+        textSubmit(duration, responseTextRef.current || responseText);
+      }
+      if (responseType === "voice") {
+        recognize(duration);
+      }
+    }, 0);
   };
 
   const loadingAnimation = (
-    <div className="loading-container flex flex-col items-center justify-center h-screen w-screen fixed top-0 left-0 bg-white z-[99] opacity-70">
+    <div className="loading-container flex flex-col items-center justify-center h-dvh w-screen fixed top-0 left-0 bg-white z-[99] opacity-70">
       <div className="loader h-16 w-16"></div>
       <span className="opacity-50 text-lg ml-4">텍스트 변환중...</span>
     </div>
@@ -292,7 +358,9 @@ export default function SituationPage() {
       <div className="text-container flex flex-col items-center justify-center bg-white rounded-t-md animate-text-slide-up relative">
         <div className="text-content w-full opacity-0 flex flex-col items-center h-full p-4 animate-text-content">
           <h1 className="text-xl font-bold mt-2  whitespace-pre-wrap text-center">{situationData?.title}</h1>
-          <div className="bubble-container flex flex-col w-full items-center gap-6 justify-center mt-8">
+          <div
+            key={situationData?.id}
+            className="bubble-container flex flex-col w-full items-center gap-6 justify-center mt-8">
 
             <div className="bubble-left self-start bg-gray-300 px-8 py-2 rounded-full rounded-tl-none shadow-md max-w-xs opacity-0 translate-y-4 animate-bubble-left">
               <span>{situationData?.description}</span>
@@ -353,7 +421,7 @@ export default function SituationPage() {
   const textResponse = (
     <div className="text-container w-full flex flex-col grow items-center justify-start gap-2">
       <div className="time-remaining flex justify-between items-center w-full">
-        <span >남은 글자수</span>
+        <span >남은 답변 시간</span>
         <div className="time-remaining-text flex items-center gap-2">
           <Image src={"/icon/clock.svg"} alt="clock" width={20} height={20} className="w-5 h-5" />
           <span className="text-xl font-bold">{timeRemaining}초</span>
@@ -367,10 +435,11 @@ export default function SituationPage() {
           rows={5}
           onChange={(e) => {
             setResponseText(e.target.value);
+            responseTextRef.current = e.target.value;
           }}
         ></textarea>
-        <div className="submit-button"
-          onClick={textSubmit}
+        <div className="submit-button cursor-pointer"
+          onClick={handleAnswerComplete}
         >
           <Image src={"/icon/btn_send_chat.svg"} alt="send" width={36} height={36} className="" />
         </div>

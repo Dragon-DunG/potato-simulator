@@ -100,15 +100,15 @@ export default function SituationRecordPage() {
   );
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-background-gray">
+    <div className="flex flex-col items-center justify-center  h-dvh bg-background-gray">
       <div className={`title-box w-full h-auto relative flex flex-col justify-between items-center justify-self-start rounded-b-xl p-7`}>
         <div className={`title-box-container absolute top-0 left-0 w-full h-full rounded-b-xl overflow-hidden`}>
           <div className="overlay absolute inset-0 bg-gradient-to-b from-black to-neutral-300 backdrop-blur-[2px] mix-blend-multiply"></div>
           <Image
             src={`/image/situation/potato_situation_${situationId}.png`}
             alt={`상황 ${situationId} 이미지`}
-            width={500}
-            height={500}
+            width={1000}
+            height={1000}
             className="object-cover w-full h-full"
           />
         </div>

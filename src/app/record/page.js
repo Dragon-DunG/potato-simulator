@@ -96,7 +96,7 @@ export default function RecordPage() {
   );
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-background-gray">
+    <div className="flex flex-col items-center justify-center h-dvh bg-background-gray">
       <div className={`title-box w-full h-auto relative flex flex-col justify-between items-center justify-self-start p-7 transition-all`}>
         <div className={`title-box-background absolute inset-0 w-full h-full rounded-b-xl overflow-clip ${level_data[userLevel - 1].bgColor}`}>
           {userLevel >= level_data.length &&
@@ -114,7 +114,7 @@ export default function RecordPage() {
           <div className="level-sticker-container flex items-center justify-center w-full p-8">
             <div className="level-sticker flex items-center justify-center w-full">
               <div className={`sticker-box flex relative items-center justify-center ${userLevel >= level_data.length ? "w-70" : "-rotate-8 w-50"}`}>
-                <div className="sticker-text text-sm absolute top-[23%] left-[57%]">{userData?.count}</div>
+                <div className="sticker-text text-xs absolute top-[24%] left-[53%] text-center w-6">{userData?.count}</div>
                 <Image src={`/image/sticker/record/record_level_${userLevel}.png`} alt={`레벨 ${userLevel} 스티커`} width={300} height={200} className="w-full h-full object-cover" />
               </div>
             </div>
