@@ -64,7 +64,7 @@ export async function POST(req) {
       },
     };
 
-    const [operation] = speechClient.longRunningRecognize(request);
+    const [operation] = await speechClient.longRunningRecognize(request);
     const [response] = await operation.promise();
     const transcription = response.results
       .map((result) => result.alternatives[0].transcript)
