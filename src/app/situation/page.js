@@ -54,7 +54,7 @@ export default function SituationPage() {
   const startRecording = () => {
     console.log("Starting recording...");
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      const mimeType = "audio/webm;codecs=opus"; // "audio/webm" or "audio/wav" or "audio/mp4"
+      const mimeType = "audio/webm; codecs=opus"; // "audio/webm" or "audio/wav" or "audio/mp4"
       if (!MediaRecorder.isTypeSupported(mimeType)) {
         console.error(`${mimeType} is not supported in this browser.`);
         return;
@@ -190,18 +190,6 @@ export default function SituationPage() {
       const audioBlob = audioBlobRef.current;
       setRecognizing(true);
       console.log("Audio Blob:", audioBlob);
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      audio.onloadedmetadata = () => {
-        console.log("Audio duration:", audio.duration);
-      };
-      const formData = new FormData();
-      formData.append("audio", audioBlob);
-
-      console.log("Form Data:", formData.get("audio"));
-      for (let pair of formData.entries()) {
-        console.log(`${pair[0]}: ${pair[1]}`);
-      }
 
       fetch("/api/transcribe", {
         method: "POST",
