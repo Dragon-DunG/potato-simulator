@@ -27,6 +27,29 @@ async function isSpeechClientValid() {
   }
 }
 
+async function streamToBuffer(stream) {
+  // Web Streams API
+  if (stream.getReader) {
+    const reader = stream.getReader();
+    const chunks = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(Buffer.from(value));
+    }
+    return Buffer.concat(chunks);
+  }
+  // Node.js ReadableStream
+  else if (typeof stream.on === "function") {
+    const chunks = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  }
+  throw new Error("Unknown stream type");
+}
+
 export async function POST(req) {
   // Google Speech-to-Text 클라이언트 유효성 검사
   const isValidClient = await isSpeechClientValid();
@@ -36,11 +59,7 @@ export async function POST(req) {
 
   // 1. 요청 본문에서 오디오 데이터 읽기
   try {
-    const chunks = [];
-    for await (const chunk of req.body) {
-      chunks.push(chunk);
-    }
-    const audioBuffer = Buffer.concat(chunks);  
+    const audioBuffer = await streamToBuffer(req.body);
 
     if (audioBuffer.length === 0) {
       throw new Error("Audio buffer is empty");
